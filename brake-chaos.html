@@ -627,6 +627,7 @@ canvas.addEventListener('touchstart', e => { e.preventDefault(); onBrake(); }, {
 const startBtn = document.getElementById('start-btn');
 
 startBtn.addEventListener('click', () => {
+  alert('START押された');
   console.log('START押された');
 
   const bgm = document.getElementById('bgm');
