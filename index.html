@@ -1,0 +1,1678 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>I LOVE COKE</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+html,body{
+  width:100%;
+  height:100%;
+  overflow:hidden;
+  background:#000;
+  font-family:'Courier New',monospace;
+}
+body{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+}
+#game{
+  position:relative;
+  width:100vw;
+  max-width:420px;
+  height:100dvh;
+  overflow:hidden;
+  background:#0a0a16;
+  color:#e8e8d0;
+  border-left:2px solid #3a3a5c;
+  border-right:2px solid #3a3a5c;
+}
+#game::after{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:repeating-linear-gradient(
+    0deg,
+    transparent 0px, transparent 2px,
+    rgba(0,0,0,0.08) 2px, rgba(0,0,0,0.08) 4px
+  );
+  z-index:99;
+}
+.screen{
+  position:absolute;
+  inset:0;
+}
+.hidden{display:none;}
+/* title */
+#titleScreen{
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  padding:24px;
+  text-align:center;
+}
+.title{
+  font-size:32px;
+  color:#ff3030;
+  text-shadow:
+    2px 2px 0 #ffffff,
+    -2px -2px 0 #ffffff,
+    2px -2px 0 #ffffff,
+    -2px 2px 0 #ffffff,
+    4px 4px 0 #800000;
+}
+  @keyframes titleGlitch {
+  0% { transform: translate(0,0); }
+  20% { transform: translate(-1px,1px); }
+  40% { transform: translate(1px,-1px); }
+  60% { transform: translate(-1px,0); }
+  80% { transform: translate(1px,1px); }
+  100% { transform: translate(0,0); }
+}
+
+.title{
+  animation: titleGlitch 0.25s infinite;
+}
+.subtitle{
+  font-size:11px;
+  color:#7878c0;
+  margin-bottom:20px;
+  letter-spacing:1px;
+}
+.info{
+  font-size:11px;
+  line-height:1.9;
+  max-width:300px;
+  border:1px solid #3a3a5c;
+  padding:12px;
+  background:rgba(255,255,255,0.03);
+  margin-bottom:20px;
+  white-space:pre-line;
+}
+.btn{
+  border:none;
+  font-family:inherit;
+  font-weight:bold;
+  letter-spacing:2px;
+  cursor:pointer;
+  color:#fff;
+  padding:14px 24px;
+}
+.btn-main{
+  background:#e02020;
+  box-shadow:4px 4px 0 #800000,-2px -2px 0 #ff6060;
+}
+.btn-main:active{
+  transform:translate(2px,2px);
+  box-shadow:2px 2px 0 #800000;
+}
+  #musicBtn{
+  margin-top: 12px;
+}
+/* play */
+#playScreen{
+  background:#0a0a16;
+}
+#statusBar{
+  position:absolute;
+  top:0;left:0;right:0;
+  height:42px;
+  background:#0d0d22;
+  border-bottom:2px solid #3a3a5c;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 12px;
+  z-index:10;
+  font-size:10px;
+  color:#7878c0;
+}
+#statusMsg{
+  flex:1;
+  text-align:center;
+  color:#f8d800;
+  font-size:11px;
+}
+#scene{
+  position:absolute;
+  top:42px;
+  bottom:110px;
+  left:0;right:0;
+}
+#controls{
+  position:absolute;
+  left:0;right:0;bottom:0;
+  height:calc(110px + env(safe-area-inset-bottom));
+  padding:12px 16px calc(16px + env(safe-area-inset-bottom));
+  background:#0a0a18;
+  border-top:2px solid #3a3a5c;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:8px;
+  z-index:10;
+}
+.ctrl{
+  width:88px;
+  height:64px;
+  border:3px solid #4a4a80;
+  background:#1a1a40;
+  color:#fff;
+  font-size:28px;
+  font-weight:bold;
+  box-shadow:4px 4px 0 #000;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  user-select:none;
+}
+.ctrl:active,.ctrl.pressed{
+  transform:translate(3px,3px);
+  box-shadow:1px 1px 0 #000;
+  background:#2a2a60;
+}
+#ctrlCenter{
+  flex:1;
+  text-align:center;
+  font-size:9px;
+  color:#4a4a70;
+  line-height:1.6;
+}
+#overlay{
+  position:absolute;
+  inset:0;
+  z-index:50;
+  background:rgba(0,0,0,0.88);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  padding:24px;
+  text-align:center;
+}
+#overlay.hidden{display:none;}
+.ovTitle{
+  font-size:20px;
+  color:#f8d800;
+  text-shadow:3px 3px 0 #6b5c00;
+  margin-bottom:16px;
+  line-height:1.5;
+}
+.ovMsg{
+  font-size:12px;
+  line-height:1.9;
+  white-space:pre-line;
+  border:1px solid #4a4a30;
+  background:rgba(255,255,255,0.03);
+  padding:12px;
+  margin-bottom:16px;
+  max-width:300px;
+}
+.row{
+  display:flex;
+  gap:12px;
+  flex-wrap:wrap;
+  justify-content:center;
+}
+.btn-yes{
+  background:#20a020;
+  box-shadow:4px 4px 0 #006000,-2px -2px 0 #60ff60;
+}
+.btn-no{
+  background:#a02020;
+  box-shadow:4px 4px 0 #600000,-2px -2px 0 #ff6060;
+}
+.btn-sub{
+  background:#2828a0;
+  box-shadow:4px 4px 0 #000880,-2px -2px 0 #6060f8;
+}
+.btn-yes:active,.btn-no:active,.btn-sub:active{
+  transform:translate(2px,2px);
+}
+/* result */
+#resultScreen{
+  background:#0a0a16;
+  z-index:60;
+}
+
+#resultScreen:not(.hidden){
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  text-align:center;
+  padding:24px;
+}
+.resultTitle{
+  font-size:20px;
+  margin-bottom:16px;
+  line-height:1.5;
+}
+.resultTitle.fail{
+  color:#ff3030;
+  font-size:48px;
+  letter-spacing:4px;
+  text-shadow:
+    -2px -2px 0 #ffffff,
+    2px -2px 0 #ffffff,
+    -2px 2px 0 #ffffff,
+    2px 2px 0 #ffffff,
+    0 0 8px rgba(255,0,0,0.6);
+}
+.resultTitle.success{
+  color:#40e040;
+  text-shadow:3px 3px 0 #006000;
+}
+.resultMsg{
+  font-size:12px;
+  line-height:2;
+  white-space:pre-line;
+  border:1px solid #3a3a5c;
+  background:rgba(255,255,255,0.03);
+  padding:14px;
+  margin-bottom:18px;
+  max-width:300px;
+}
+.resultMeta{
+  font-size:10px;
+  color:#5a5a80;
+  margin-bottom:20px;
+}
+/* scene art */
+.pixel{
+  image-rendering:pixelated;
+}
+@keyframes shake{
+  0%,100%{transform:translateX(0)}
+  20%{transform:translateX(-6px)}
+  40%{transform:translateX(6px)}
+  60%{transform:translateX(-4px)}
+  80%{transform:translateX(4px)}
+}
+.shake{
+  animation:shake .35s ease;
+}
+</style>
+</head>
+<body>
+<div id="game">
+
+  <div id="titleScreen" class="screen">
+  <canvas id="titleChar" width="140" height="140" style="margin-bottom:10px;"></canvas>
+  <div class="title">I LOVE COKE</div>
+    <div class="subtitle">PITFALL ESCAPE v2.0</div>
+  <div class="info">目標
+
+・コーラをゲットしよう
+・生き延びろ
+
+※ 保証はありません</div>
+    <button class="btn btn-main" id="startBtn">PUSH START</button>
+    <button class="btn btn-sub" id="musicBtn">MUSIC START</button>
+  </div>
+
+  <div id="playScreen" class="screen hidden">
+    <div id="statusBar">
+      <span id="statusLeft">STAGE 1</span>
+      <span id="statusMsg">板まで歩け！</span>
+      <span id="statusRight">HP: ♥</span>
+    </div>
+    <canvas id="scene" width="360" height="480"></canvas>
+
+    <div id="controls">
+      <div class="ctrl" id="leftBtn">◀</div>
+      <div id="ctrlCenter">LEFT / RIGHT<br>で板まで移動</div>
+      <div class="ctrl" id="rightBtn">▶</div>
+    </div>
+
+    <div id="overlay" class="hidden">
+      <div class="ovTitle" id="ovTitle">！！</div>
+      <div class="ovMsg" id="ovMsg"></div>
+      <div class="row" id="ovButtons"></div>
+    </div>
+  </div>
+
+  <div id="resultScreen" class="screen hidden">
+    <div id="resultTitle" class="resultTitle fail">GAME OVER</div>
+    <div id="resultMsg" class="resultMsg"></div>
+    <div id="resultMeta" class="resultMeta"></div>
+    <button class="btn btn-main" id="retryBtn">もう一度</button>
+    <button class="btn btn-sub" id="backTitleBtn" style="margin-top:10px;">タイトルへ</button>
+  </div>
+
+</div>
+
+<audio id="seHit" src="hit.mp3" preload="auto"></audio>
+<audio id="bgmTitle" src="title_bgm.wav" preload="auto" loop></audio>
+<script>
+  let audioCtx = null;
+
+function getCtx(){
+  if(!audioCtx){
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  }
+  return audioCtx;
+}
+const scene = document.getElementById('scene');
+const ctx = scene.getContext('2d');
+
+const state = {
+  phase: 'title', // title walk board falling event result
+  playerX: 10,
+  playerY: 255,
+  dir: 1,
+  walkFrame: 0,
+  moving: { left:false, right:false },
+  boards: [],
+  safeIndex: 0,
+  stage: 1,
+  progress: 0,
+  fallingDepth: 0,
+  playCount: 0,
+  successCount: 0,
+  colaStreak: 0,
+  score: 0,
+  eventType: null,
+  choiceLabel: '',
+  canInput: true,
+  bullets: [],
+  showCola: false,
+  ufo: null,
+  reverseStage: false,
+  bottomShotStage: false,
+  bottomShotWarn: 0,
+    reverseWarn: 0,
+  flashTimer: 0,
+  bonusStage: false,
+bonusTimer: 0,
+bonusColas: [],
+bonusCaught: 0,
+};
+let clones = [];
+const boardDefs = [
+  { x: 75,  y: 315, w: 70, h: 18 },
+  { x: 155, y: 315, w: 70, h: 18 },
+  { x: 235, y: 315, w: 70, h: 18 },
+];
+
+function makeBoards() {
+  state.safeIndex = Math.floor(Math.random() * 3);
+  state.boards = boardDefs.map((b, i) => ({
+    ...b,
+    safe: i === state.safeIndex,
+    broken: false,
+    crack: 0,
+    passed: false
+  }));
+}
+function resetGame() {
+  state.phase = 'walk';
+  state.playerX = 10;
+  state.playerY = 255;
+  state.dir = 1;
+  state.walkFrame = 0;
+  state.moving.left = false;
+  state.moving.right = false;
+  state.stage = 1;
+  state.progress = 0;
+  state.fallingDepth = 0;
+  state.score = 0;
+  state.eventType = null;
+  state.choiceLabel = '';
+  state.canInput = true;
+  state.showCola = false;
+  state.bonusStage = false;
+state.bonusTimer = 0;
+state.bonusColas = [];
+state.bonusCaught = 0;
+ 
+  makeBoards();
+   if(state.bottomShotStage){
+    state.bottomShotWarn = 120;
+  } else {
+    state.bottomShotWarn = 0;
+  }
+
+  if(state.reverseStage){
+    state.reverseWarn = 120;
+  } else {
+    state.reverseWarn = 0;
+  }
+  if(state.reverseStage){
+  state.flashTimer = 12;
+}
+  setStatus('STAGE 1', '板まで歩け！', 'HP: ♥');
+  const bgm = document.getElementById('bgmTitle');
+
+bgm.pause();
+bgm.currentTime = 0;
+}
+
+function setStatus(left, msg, right) {
+  document.getElementById('statusLeft').textContent = left;
+  document.getElementById('statusMsg').textContent = msg;
+  document.getElementById('statusRight').textContent = right;
+}
+
+function showScreen(name) {
+  document.getElementById('titleScreen').classList.add('hidden');
+  document.getElementById('playScreen').classList.add('hidden');
+  document.getElementById('resultScreen').classList.add('hidden');
+  document.getElementById(name).classList.remove('hidden');
+}
+
+function showOverlay(title, msg, buttons) {
+  document.getElementById('ovTitle').textContent = title;
+  document.getElementById('ovMsg').textContent = msg;
+  const box = document.getElementById('ovButtons');
+  box.innerHTML = '';
+  buttons.forEach(b => {
+    const el = document.createElement('button');
+    el.className = 'btn ' + b.cls;
+    el.textContent = b.label;
+    el.ontouchend = function(e){ e.preventDefault(); b.action(); };
+    box.appendChild(el);
+  });
+  document.getElementById('overlay').classList.remove('hidden');
+}
+
+function hideOverlay() {
+  document.getElementById('overlay').classList.add('hidden');
+}
+
+function drawBackground() {
+  const g = ctx.createLinearGradient(0,0,0,480);
+  g.addColorStop(0,'#0a0a20');
+  g.addColorStop(1,'#1a1a30');
+  ctx.fillStyle = g;
+  ctx.fillRect(0,0,360,480);
+
+  ctx.fillStyle = '#e8e8c0';
+  [[30,20],[80,50],[150,15],[220,40],[300,25],[340,60],[60,80],[180,70],[270,55],[320,90],[10,100],[130,95]]
+    .forEach(([x,y]) => ctx.fillRect(x,y,2,2));
+
+  ctx.fillStyle = '#2a1e08';
+  ctx.fillRect(0,260,36,58);
+  ctx.fillRect(324,260,36,58);
+
+  ctx.fillStyle = '#3a2a10';
+  ctx.fillRect(0,305,360,10);
+  ctx.fillStyle = '#2a1a08';
+  ctx.fillRect(0,315,360,165);
+
+  ctx.fillStyle = '#4a3a18';
+  for(let x=0;x<360;x+=16) ctx.fillRect(x,308,8,4);
+  for(let x=8;x<360;x+=16) ctx.fillRect(x,316,8,4);
+
+  ctx.fillStyle = '#5a4a20';
+  ctx.fillRect(0,315,40,165);
+  ctx.fillRect(320,315,40,165);
+}
+
+function drawHoleBackground() {
+  ctx.fillStyle = '#050508';
+  ctx.fillRect(0,0,360,480);
+
+  ctx.fillStyle = '#1a1008';
+  for(let y=0;y<480;y+=24){
+    for(let x=(y%48===0?0:12);x<360;x+=24){
+      ctx.fillRect(x,y,10,10);
+    }
+  }
+
+  const g = ctx.createLinearGradient(180,0,180,220);
+  g.addColorStop(0,'rgba(100,100,60,0.3)');
+  g.addColorStop(1,'rgba(0,0,0,0)');
+  ctx.fillStyle = g;
+  ctx.beginPath();
+  ctx.moveTo(125,0);
+  ctx.lineTo(235,0);
+  ctx.lineTo(280,220);
+  ctx.lineTo(80,220);
+  ctx.closePath();
+  ctx.fill();
+
+  if(state.fallingDepth > 20){
+    ctx.fillStyle = '#4a3a20';
+    ctx.font = '10px Courier New';
+    ctx.fillText('深さ: ' + Math.floor(state.fallingDepth) + 'm...', 10, 20);
+  }
+}
+
+function drawBoard(b) {
+  if (b.broken) return;
+  const wood = ['#8b5e3c','#7a5030','#6a4020'][Math.min(b.crack,2)];
+  const grain = ['#6b4020','#5a3010','#4a2010'][Math.min(b.crack,2)];
+
+  ctx.fillStyle = 'rgba(0,0,0,0.5)';
+  ctx.fillRect(b.x+3,b.y+3,b.w,b.h);
+
+  ctx.fillStyle = wood;
+  ctx.fillRect(b.x,b.y,b.w,b.h);
+
+  ctx.fillStyle = grain;
+  for(let i=0;i<4;i++) ctx.fillRect(b.x+4+i*16,b.y+2,2,b.h-4);
+
+  ctx.strokeStyle = '#4a2800';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(b.x,b.y,b.w,b.h);
+
+  if(b.crack >= 1){
+    ctx.strokeStyle = '#1a0800';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(b.x+b.w*0.3,b.y);
+    ctx.lineTo(b.x+b.w*0.4,b.y+b.h);
+    ctx.stroke();
+  }
+  if(b.crack >= 2){
+    ctx.beginPath();
+    ctx.moveTo(b.x+b.w*0.6,b.y);
+    ctx.lineTo(b.x+b.w*0.5,b.y+b.h);
+    ctx.stroke();
+  }
+
+  ctx.fillStyle = '#a08060';
+  ctx.font = '9px Courier New';
+  ctx.fillText('[板' + (state.boards.indexOf(b)+1) + ']', b.x+18, b.y-6);
+}
+
+function drawPixelChar(x,y,dir,variant='normal') {
+  const s = 3;
+ const colors = [
+  '', 
+  '#f5c48a',   // 肌
+  '#3a1a00',   // 髪
+  '#e02020',   // 服（赤）
+  '#ffffff',   // 服サブ（白）
+  '#202020',   // 足
+  '#ffffff',   // 目
+  '#ff4040'    // アクセント
+];
+
+  const walkA = [
+    [0,0,2,2,2,0,0,0],[0,0,1,1,1,0,0,0],[0,0,1,6,1,0,0,0],[0,2,1,1,1,2,0,0],
+    [0,0,3,3,3,0,0,0],[0,3,3,3,3,3,0,0],[0,0,3,3,3,0,0,0],[0,0,4,4,4,0,0,0],
+    [0,0,4,4,4,0,0,0],[0,5,0,0,0,5,0,0],[0,5,0,0,0,5,0,0],
+    [0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],
+  ];
+  const walkB = [
+    [0,0,2,2,2,0,0,0],[0,0,1,1,1,0,0,0],[0,0,1,6,1,0,0,0],[0,2,1,1,1,2,0,0],
+    [0,0,3,3,3,0,0,0],[0,3,3,3,3,3,0,0],[0,0,3,3,3,0,0,0],[0,0,4,0,4,0,0,0],
+    [0,4,0,0,0,4,0,0],[5,0,0,0,0,0,5,0],[5,0,0,0,0,0,5,0],
+    [0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],
+  ];
+  const fall = [
+    [0,0,2,2,2,0,0,0],[0,0,1,1,1,0,0,0],[0,0,1,7,1,0,0,0],[0,2,1,1,1,2,0,0],
+    [3,0,3,3,3,0,3,0],[0,3,3,3,3,3,0,0],[0,0,3,3,3,0,0,0],[0,4,0,4,0,4,0,0],
+    [4,0,0,0,0,0,4,0],[5,0,0,0,0,0,5,0],
+    [0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],[0,0,0,0,0,0,0,0],
+  ];
+
+  const px = variant === 'fall' ? fall : ((Math.floor(state.walkFrame/8)%2===0)?walkA:walkB);
+
+  ctx.save();
+  ctx.translate(x,y);
+  if(dir < 0){
+    ctx.scale(-1,1);
+    ctx.translate(-8*s,0);
+  }
+
+  for(let r=0;r<16;r++){
+    for(let c=0;c<8;c++){
+      const v = px[r][c];
+      if(!v) continue;
+      ctx.fillStyle = colors[v];
+      ctx.fillRect(c*s,r*s,s,s);
+    }
+  }
+  ctx.restore();
+}
+
+function render() {
+  ctx.clearRect(0,0,360,480);
+
+  if(state.reverseStage){
+    ctx.save();
+    ctx.translate(360, 0);
+    ctx.scale(-1, 1);
+  }
+
+  if(state.phase === 'falling' || state.phase === 'event'){
+    drawHoleBackground();
+
+    if(state.phase === 'event'){
+      if(state.eventType === 'ladder'){
+        drawLadder();
+      } else if(state.eventType === 'rope'){
+        drawRope();
+      } else if(state.eventType === 'sign'){
+        drawSign();
+      }
+    }
+
+    const y = Math.min(410, 80 + state.fallingDepth * 0.7);
+    drawPixelChar(state.playerX, y, state.dir, 'fall');
+
+    if(state.reverseStage){
+      ctx.restore();
+    }
+    return;
+  }
+
+  drawBackground();
+  state.boards.forEach(drawBoard);
+  drawPixelChar(state.playerX, state.playerY, state.dir, 'normal');
+  drawGoalSign();
+if(state.bonusStage){
+  state.bonusColas.forEach(c => {
+    drawCola(c.x, c.y, 1);
+  });
+}
+  if(state.ufo){
+    drawUFO(state.ufo.x, state.ufo.y);
+  }
+
+  state.bullets.forEach(b => {
+    drawMissile(b.x, b.y);
+  });
+
+  if(state.reverseStage){
+    ctx.restore();
+  }
+    if(state.reverseWarn > 0){
+    state.reverseWarn--;
+  }
+
+    if(state.bottomShotWarn > 0){
+    const a = 0.45 + 0.55 * Math.sin(Date.now() * 0.012);
+
+    ctx.fillStyle = 'rgba(250,80,80,' + a + ')';
+    ctx.font = 'bold 72px Courier New';
+    ctx.fillText('⬆', 150, 448);
+
+    ctx.font = 'bold 28px Courier New';
+    ctx.fillText('WARNING', 96, 400);
+  }
+ if(state.reverseWarn > 0){
+  const a = 0.45 + 0.55 * Math.sin(Date.now() * 0.012);
+
+  ctx.textAlign = 'center';  // ←追加
+
+  // ⚠
+  ctx.lineWidth = 6;
+  ctx.strokeStyle = '#ffffff';
+  ctx.font = 'bold 64px Courier New';
+  ctx.strokeText('⚠', 180, 200);
+
+  ctx.fillStyle = 'rgba(255,80,80,' + a + ')';
+  ctx.fillText('⚠', 180, 200);
+
+  // REVERSE
+  ctx.lineWidth = 3;
+  ctx.strokeStyle = '#ffffff';
+  ctx.font = 'bold 20px Courier New';
+  ctx.strokeText('REVERSE', 180, 260);
+
+  ctx.fillStyle = 'rgba(248,216,0,' + a + ')';
+  ctx.fillText('REVERSE', 180, 260);
+
+  ctx.textAlign = 'left'; // ←戻す（重要）
+   
+}
+  // フラッシュ演出
+if(state.flashTimer > 0){
+  const alpha = state.flashTimer / 12;
+
+  ctx.fillStyle = 'rgba(255,255,180,' + alpha + ')';
+  ctx.fillRect(0,0,360,480);
+}
+  if(state.showCola){
+    ctx.fillStyle = 'rgba(0,0,0,0.8)';
+    ctx.fillRect(0,0,360,480);
+
+    drawCola(156, 180, 2);
+
+    ctx.fillStyle = '#000';
+    ctx.font = 'bold 32px Courier New';
+    ctx.fillText('COKE x ' + (state.colaStreak + 1), 102, 262);
+
+    ctx.fillStyle = '#f8d800';
+    ctx.fillText('COKE x ' + (state.colaStreak + 1), 100, 260);
+
+    for(let i=0;i<20;i++){
+      ctx.fillStyle = ['#ff4040','#40ff40','#4040ff','#ffff40'][i%4];
+      const x = Math.random()*360;
+      const y = Math.random()*480;
+      ctx.fillRect(x, y, 4, 4);
+    }
+  }
+}
+
+function drawLadder(){
+  const x = 165, y = 80, h = 320;
+  ctx.fillStyle = '#a0701a';
+  ctx.fillRect(x,y,6,h);
+  ctx.fillRect(x+24,y,6,h);
+  ctx.fillStyle = '#c08020';
+  for(let yy=y+8;yy<y+h;yy+=18) ctx.fillRect(x,yy,30,5);
+  ctx.strokeStyle = '#6b4800';
+  ctx.strokeRect(x,y,30,h);
+}
+
+function drawRope(){
+  const x = 176, y = 0, h = 340;
+  ctx.strokeStyle = '#c8a050';
+  ctx.lineWidth = 5;
+  ctx.beginPath();
+  ctx.moveTo(x+4,y);
+  for(let yy=y;yy<y+h;yy+=20){
+    ctx.lineTo(x + (yy%40<20?0:8), yy+10);
+    ctx.lineTo(x+4, yy+20);
+  }
+  ctx.stroke();
+}
+
+function drawSign(){
+  const x = 135, y = 120;
+  ctx.fillStyle = '#8b5e3c';
+  ctx.fillRect(x+12,y,6,80);
+  ctx.fillStyle = '#f5d060';
+  ctx.fillRect(x,y,90,40);
+  ctx.strokeStyle = '#8b6000';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(x,y,90,40);
+  ctx.fillStyle = '#3a1a00';
+  ctx.font = 'bold 11px Courier New';
+  ctx.fillText('出口 →', x+8, y+16);
+  ctx.font = '9px Courier New';
+  ctx.fillText('(たぶん)', x+18, y+32);
+}
+  function drawUFO(x, y){
+  // 本体
+  ctx.fillStyle = '#888888';
+  ctx.fillRect(x + 4, y + 4, 20, 6);
+
+  // ドーム
+  ctx.fillStyle = '#a8e8ff';
+  ctx.fillRect(x + 8, y, 12, 5);
+
+  // 下の光
+  ctx.fillStyle = '#fff280';
+  ctx.fillRect(x + 10, y + 10, 8, 2);
+
+  // ちっさい足
+  ctx.fillStyle = '#666666';
+  ctx.fillRect(x + 6, y + 10, 2, 2);
+  ctx.fillRect(x + 20, y + 10, 2, 2);
+}
+  function drawMissile(x, y){
+  // 先端（赤）
+  ctx.fillStyle = '#ff0000';
+  ctx.fillRect(x+2, y, 2, 4);
+
+  // 胴体（白）
+  ctx.fillStyle = '#666';
+  ctx.fillRect(x, y+4, 6, 10);
+
+  // 羽（グレー）
+  ctx.fillStyle = '#808080';
+ ctx.fillRect(x-2, y+8, 3, 5);
+ctx.fillRect(x+7, y+8, 3, 5);
+  // 炎（ランダムで揺らす）
+  ctx.fillStyle = '#ff8000';
+  const flame = Math.random() * 4;
+  ctx.fillRect(x+2, y+14, 2, flame);
+}
+function drawCola(x, y, scale=1){
+  const s = scale;
+
+  ctx.fillStyle = '#e02020';
+  ctx.fillRect(x, y, 24*s, 40*s);
+
+  ctx.fillStyle = '#cccccc';
+  ctx.fillRect(x, y, 24*s, 6*s);
+  ctx.fillRect(x, y + 34*s, 24*s, 6*s);
+
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(x + 4*s, y + 12*s, 16*s, 3*s);
+  ctx.fillRect(x + 6*s, y + 18*s, 12*s, 3*s);
+
+  ctx.fillStyle = '#ffffff';
+  ctx.font = (10*s) + 'px Courier New';
+  ctx.fillText('C', x + 8*s, y + 30*s);
+
+  // 爆発炭酸（アメリカン仕様）
+for(let i=0;i<80;i++){
+  const bx = x + 12*s + (Math.random()*60 - 30)*s;
+  const by = y - Math.random()*200*s;
+
+  const size = Math.random() < 0.7 ? 2*s : 3*s;
+
+  ctx.fillStyle = Math.random() < 0.8 ? '#ffffff' : '#f8d800';
+  ctx.fillRect(bx, by, size, size);
+}
+
+// 根元の噴射（太め）
+for(let i=0;i<6;i++){
+  const spread = (Math.random()*10 - 5)*s;
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineWidth = 2;
+
+  ctx.beginPath();
+  ctx.moveTo(x + 12*s, y);
+  ctx.lineTo(x + 12*s + spread, y - 20*s - Math.random()*30*s);
+  ctx.stroke();
+}
+}
+function drawGoalSign(){
+  const poleX1 = 306;
+  const poleX2 = 342;
+  const poleTop = 242;
+  const poleBottom = 315;
+
+  ctx.fillStyle = '#6e5a2a';
+  ctx.fillRect(poleX1, poleTop, 4, poleBottom - poleTop);
+  ctx.fillRect(poleX2, poleTop, 4, poleBottom - poleTop);
+
+  const signX = 298;
+  const signY = 252;
+  const signW = 52;
+  const signH = 28;
+  
+
+  ctx.fillStyle = '#111';
+  ctx.fillRect(signX + 2, signY + 2, signW, signH);
+
+  const cell = 6;
+  for(let row = 0; row < 4; row++){
+    for(let col = 0; col < 8; col++){
+      ctx.fillStyle = ((row + col) % 2 === 0) ? '#f5f5f5' : '#111111';
+      ctx.fillRect(signX + col * cell, signY + row * cell, cell, cell);
+    }
+  }
+
+  ctx.strokeStyle = '#c8b070';
+ctx.lineWidth = 2;
+ctx.strokeRect(signX, signY, signW, signH);
+
+// 影（白）
+ctx.fillStyle = '#ffffff';
+ctx.font = 'bold 16px Courier New';
+ctx.fillText('COKE', 292, 246);
+
+ctx.fillStyle = '#ff3030';
+ctx.fillText('COKE', 293, 247);
+}
+function update() {
+  state.score++;
+  if(state.bonusStage){
+  state.bonusTimer--;
+
+  // コーラ生成
+  if(Math.random() < 0.18){
+    state.bonusColas.push({
+      x: Math.random() * 320 + 20,
+      y: -30,
+      vy: 4 + Math.random() * 2
+    });
+  }
+
+  // コーラ移動
+  state.bonusColas.forEach(c => {
+    c.y += c.vy;
+  });
+
+  // キャッチ判定
+  for(let i = state.bonusColas.length - 1; i >= 0; i--){
+    const c = state.bonusColas[i];
+    const dx = c.x - (state.playerX + 12);
+    const dy = c.y - (state.playerY + 20);
+
+    if(Math.abs(dx) < 22 && Math.abs(dy) < 26){
+      state.bonusColas.splice(i, 1);
+      state.bonusCaught++;
+      state.score += 100;
+      playGetSound();
+      setStatus('BONUS', 'コーラを取りまくれ！！', 'GET: ' + state.bonusCaught);
+    }
+  }
+
+  // 画面外削除
+  state.bonusColas = state.bonusColas.filter(c => c.y < 520);
+
+  // ボーナス終了
+  if(state.bonusTimer <= 0){
+    state.bonusStage = false;
+    showResult(true, 'BONUS END!', 'コーラ ' + state.bonusCaught + '本GET！！');
+  }
+  // ボーナス中の左右移動
+  if(state.moving.left){
+    state.playerX = Math.max(8, state.playerX - 4);
+    state.dir = -1;
+    state.walkFrame++;
+  }
+
+  if(state.moving.right){
+    state.playerX = Math.min(326, state.playerX + 4);
+    state.dir = 1;
+    state.walkFrame++;
+  }
+  return;
+}
+    if(state.bottomShotWarn > 0){
+    state.bottomShotWarn--;
+  }
+  if(state.flashTimer > 0){
+  state.flashTimer--;
+}
+  // UFO出現（たまに）
+if(!state.ufo && Math.random() < 0.002){
+  state.ufo = {
+    x: -40,
+    y: Math.random()*120 + 20
+  };
+}
+  // UFO移動
+if(state.ufo){
+  state.ufo.x += 2;
+
+  if(state.ufo.x > 400){
+    state.ufo = null;
+  }
+}
+  
+
+  if(state.phase !== 'walk' || !state.canInput) return;
+ 
+  // 弾生成
+if(state.walkFrame > 20 && Math.random() < 0.3){
+  if(state.bullets.length < 8){
+    const killer = Math.random() < 0.2;
+
+    state.bullets.push({
+  x: killer ? state.playerX : Math.random() * 320 + 20,
+  y: state.bottomShotStage ? 480 : 0
+});
+  }
+}
+
+  // 弾移動
+  state.bullets.forEach(b=>{
+  b.y += state.bottomShotStage ? -9 : 9;
+b.x += Math.sin(b.y * 0.1) * 2;
+  });
+
+  // 画面外削除
+  state.bullets = state.bullets.filter(b => b.y < 500);
+
+  // 当たり判定
+  for(let i=0;i<state.bullets.length;i++){
+    const b = state.bullets[i];
+
+    const dx = b.x - (state.playerX + 12);
+    const dy = b.y - (state.playerY + 20);
+
+   if(Math.abs(dx) < 16 && Math.abs(dy) < 20){
+  state.bullets = [];
+  state.canInput = false;
+  state.moving.left = false;
+  state.moving.right = false;
+     playHitSound();
+  shakeGame();
+ setStatus('HIT!!', 'やられた…', 'HP: 0');
+  setTimeout(() => {
+    state.reverseStage = false;
+state.bottomShotStage = false;
+    startFalling();
+  }, 500);
+  return;
+}
+  }
+
+  // 移動
+  const speed = 3;
+if(state.moving.left){
+  if(state.reverseStage){
+    state.playerX = Math.min(326, state.playerX + 3);
+    state.dir = 1;
+  } else {
+    state.playerX = Math.max(8, state.playerX - 3);
+    state.dir = -1;
+  }
+  state.walkFrame++;
+
+  if(state.walkFrame % 6 === 0){
+    playStepSound();
+  }
+}
+
+if(state.moving.right){
+  if(state.reverseStage){
+    state.playerX = Math.max(8, state.playerX - 3);
+    state.dir = -1;
+  } else {
+    state.playerX = Math.min(326, state.playerX + 3);
+    state.dir = 1;
+  }
+  state.walkFrame++;
+
+  if(state.walkFrame % 6 === 0){
+    playStepSound();
+  }
+}
+  // 右端到達 → 落下（理不尽）
+ const footX = state.playerX + 12;
+if(footX >= 332){
+  state.canInput = false;
+  state.bullets = [];
+  state.showCola = true;
+  playWinSound();
+  return;
+}
+
+  // 左端戻り → 落下
+if(state.playerX <= 10 && state.walkFrame > 10){
+    state.bullets = [];
+    startFalling();
+    return;
+  }
+}
+
+
+
+
+function onBoardHit(idx) {
+  if(state.boards[idx].safe){
+    onSafeBoard(idx);
+  } else {
+    onDangerBoard(idx);
+  }
+}
+function onSafeBoard(idx) {
+  state.boards[idx].passed = true;
+
+  const lines = [
+    'あれ？\n割れない…？\nもしかして…',
+    'ん？\n大丈夫か？\nいけそう！',
+    'お！\nなんか固い。\n安全かも！',
+    'えっ\n落ちない！\nやるじゃん自分！'
+  ];
+
+  setStatus('STAGE 1', '前へ進め！', 'HP: ♥');
+
+  showOverlay(
+    'セーフ！！',
+    lines[Math.floor(Math.random()*lines.length)] + '\n\nこのまま前へ進め！',
+    [{
+      label: '進む →',
+      cls: 'btn-main',
+      action: () => {
+        hideOverlay();
+        state.playerX = state.boards[idx].x + state.boards[idx].w - 10;
+        state.phase = 'walk';
+        state.canInput = true;
+      }
+    }]
+  );
+}
+
+function proceedToNextTrap() {
+  state.progress++;
+  state.stage++;
+
+  if(state.progress >= 3){
+    showFallEvent();
+    return;
+  }
+
+  makeBoards();
+  state.playerX = 90 + state.progress * 35;
+  state.playerY = 255;
+  state.dir = 1;
+  state.phase = 'walk';
+  state.canInput = true;
+  setStatus('STAGE ' + state.stage, '次の板を踏め！', 'HP: ♥');
+}
+
+function onDangerBoard(idx) {
+  const b = state.boards[idx];
+  let n = 0;
+
+  const iv = setInterval(() => {
+    n++;
+    b.crack = n;
+
+    if(n === 1){
+      shakeGame();
+      setStatus('STAGE ' + state.stage, 'ミシ…', 'HP: ♥');
+    } else if(n === 2){
+      shakeGame();
+      setStatus('STAGE ' + state.stage, 'ミシミシ！！', 'HP: ♥');
+    } else if(n === 3){
+      b.broken = true;
+      clearInterval(iv);
+      startFalling();
+    }
+  }, 260);
+}
+
+function startFalling() {
+  playFallSound();
+  state.phase = 'falling';
+  state.fallingDepth = 0;
+  setStatus('STAGE ' + state.stage, '落下中…', 'HP: 0');
+
+  const iv = setInterval(() => {
+    state.fallingDepth += 12;
+    if(state.fallingDepth >= 520){
+      clearInterval(iv);
+      playLandSound();
+      shakeGame();
+      setTimeout(showFallEvent, 400);
+    }
+  }, 30);
+}
+
+function showFallEvent() {
+  state.phase = 'event';
+  const types = ['ladder','rope','sign','nothing'];
+  state.eventType = types[Math.floor(Math.random() * types.length)];
+
+  hideOverlay();
+
+  setTimeout(() => {
+   if(state.eventType === 'ladder'){
+  showOverlay('', '', [
+    { label:'YES', cls:'btn-yes', action:() => resolveEvent(true) },
+    { label:'NO', cls:'btn-no', action:() => resolveEvent(false) }
+  ]);
+} else if(state.eventType === 'rope'){
+  showOverlay('', '', [
+    { label:'つかむ', cls:'btn-yes', action:() => resolveEvent(true) },
+    { label:'やめる', cls:'btn-no', action:() => resolveEvent(false) }
+  ]);
+} else if(state.eventType === 'sign'){
+  showOverlay('', '', [
+    { label:'信じる', cls:'btn-yes', action:() => resolveEvent(true) },
+    { label:'信じない', cls:'btn-no', action:() => resolveEvent(false) }
+  ]);
+} else {
+  showOverlay('', '', [
+    { label:'諦めない', cls:'btn-yes', action:() => resolveEvent(true) },
+    { label:'諦める', cls:'btn-no', action:() => resolveEvent(false) }
+  ]);
+}
+  }, 900);
+}
+    
+
+function resolveEvent(yes) {
+  hideOverlay();
+  state.playCount++;
+  state.choiceLabel = yes ? 'YES' : 'NO';
+
+  const ok = Math.random() < 0.35;
+
+  if(ok){
+  const wins = [
+    'なんとか助かった。\nでも理由はよく分からない。',
+    '奇跡的に脱出した！\n一応クリアでいいだろう。',
+    'なぜか助かった。\nゲームってそういうものだ。'
+  ];
+  // 生還＝失敗
+  showResult(false, 'FAIL', wins[Math.floor(Math.random()*wins.length)]);
+} else {
+  const fails = [
+    'そんなもんあるか笑笑',
+    '期待したお前の負けです。',
+    '助かると思った？\n残念でした。',
+    '仕様です。'
+  ];
+  // ガチ失敗
+  showResult(false, 'wasted', fails[Math.floor(Math.random()*fails.length)]);
+}
+}
+  function startBonusStage(){
+  state.phase = 'walk';
+  state.bonusStage = true;
+  state.bonusTimer = 300; // 約5秒
+  state.bonusColas = [];
+  state.bonusCaught = 0;
+
+  state.playerX = 170;
+  state.playerY = 255;
+  state.moving.left = false;
+  state.moving.right = false;
+  state.canInput = true;
+  state.showCola = false;
+  state.bullets = [];
+  state.ufo = null;
+
+  setStatus('BONUS', 'コーラを取りまくれ！！', 'GET: 0');
+  showScreen('playScreen');
+}
+function showResult(success, title, msg) {
+  state.phase = 'result';
+
+  if(!success){
+    state.colaStreak = 0;
+  }
+
+  document.getElementById('resultTitle').textContent = title;
+  document.getElementById('resultTitle').className = 'resultTitle ' + (success ? 'success' : 'fail');
+  document.getElementById('resultMsg').innerHTML =
+    msg +
+    '<br><br>' +
+    '<div style="font-size:28px;font-weight:bold;color:#f8d800;letter-spacing:2px;">SCORE</div>' +
+    '<div style="font-size:42px;font-weight:bold;color:#ffffff;margin-top:6px;">' + state.score + '</div>';
+  document.getElementById('resultMeta').textContent =
+    'イベント: ' + (state.eventType || '?') +
+    ' | 選択: ' + state.choiceLabel +
+    ' | 挑戦: ' + state.playCount + '回 | 脱出: ' + state.successCount + '回';
+
+  showScreen('resultScreen');
+}
+function shakeGame() {
+  const g = document.getElementById('game');
+  g.classList.remove('shake');
+  void g.offsetWidth;
+  g.classList.add('shake');
+  g.addEventListener('animationend', () => g.classList.remove('shake'), { once:true });
+}
+
+function loop() {
+  update();
+  render();
+  requestAnimationFrame(loop);
+}
+
+function bindHoldButton(el, dir) {
+  const press = (e) => {
+    e.preventDefault();
+    state.moving[dir] = true;
+    el.classList.add('pressed');
+  };
+  const release = (e) => {
+    if(e) e.preventDefault();
+    state.moving[dir] = false;
+    el.classList.remove('pressed');
+  };
+
+  el.addEventListener('touchstart', press, { passive:false });
+  el.addEventListener('touchend', release, { passive:false });
+  el.addEventListener('touchcancel', release, { passive:false });
+  el.addEventListener('mousedown', press);
+  el.addEventListener('mouseup', release);
+  el.addEventListener('mouseleave', release);
+}
+
+document.getElementById('startBtn').onclick = () => {
+  const ctx = getCtx();
+  ctx.resume();
+  playStartSound();
+
+  const bgm = document.getElementById('bgmTitle');
+  bgm.pause();
+  bgm.currentTime = 0;
+
+  showScreen('playScreen');
+  document.getElementById('mapBackBtn').style.display = 'none';
+  resetGame();
+};
+document.getElementById('retryBtn').onclick = () => {
+  showScreen('playScreen');
+  document.getElementById('mapBackBtn').style.display = 'none';
+  resetGame();
+};
+
+document.getElementById('backTitleBtn').onclick = () => {
+  state.phase = 'title';
+  showScreen('titleScreen');
+  document.getElementById('mapBackBtn').style.display = '';
+  document.getElementById('bgmTitle').play();
+};
+
+bindHoldButton(document.getElementById('leftBtn'), 'left');
+bindHoldButton(document.getElementById('rightBtn'), 'right');
+
+document.addEventListener('keydown', (e) => {
+  if(e.key === 'ArrowLeft') state.moving.left = true;
+  if(e.key === 'ArrowRight') state.moving.right = true;
+});
+document.addEventListener('keyup', (e) => {
+  if(e.key === 'ArrowLeft') state.moving.left = false;
+  if(e.key === 'ArrowRight') state.moving.right = false;
+});
+scene.addEventListener('touchstart', () => {
+  if(state.showCola){
+    state.showCola = false;
+    state.colaStreak++;
+
+    // ステージ抽選
+    state.reverseStage = false;
+    state.bottomShotStage = false;
+
+    const r = Math.random();
+
+    if(r < 0.33){
+      state.reverseStage = true;
+    } else if(r < 0.66){
+      state.bottomShotStage = true;
+    }
+
+    const bonusRoll = Math.random();
+
+if(bonusRoll < 0.25){
+  startBonusStage();
+} else {
+  showResult(true, 'YOU WIN!', 'コーラ最高！！');
+}
+  }
+});
+showScreen('titleScreen');
+  document.getElementById('bgmTitle').play().catch(() => {});
+loop();
+  const subs = [
+  'PITFALL ESCAPE v2.0',
+  'COKE IS LOVE',
+  'DO NOT TRUST',
+  '100% SAFE',
+  '助かる保証はありません'
+];
+
+setInterval(()=>{
+  const el = document.querySelector('.subtitle');
+  if(el){
+    el.textContent = subs[Math.floor(Math.random()*subs.length)];
+  }
+}, 1500);
+function playHitSound(){
+  const ctx = getCtx();
+  ctx.resume();
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+
+  osc.type = 'square';
+
+  osc.frequency.setValueAtTime(180, ctx.currentTime);
+  osc.frequency.exponentialRampToValueAtTime(70, ctx.currentTime + 0.12);
+
+  gain.gain.setValueAtTime(0.3, ctx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.12);
+
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+
+  osc.start();
+  osc.stop(ctx.currentTime + 0.12);
+}
+  function playGetSound(){
+  const ctx = getCtx();
+  ctx.resume();
+
+  const now = ctx.currentTime;
+
+  const osc1 = ctx.createOscillator();
+  const gain1 = ctx.createGain();
+
+  const osc2 = ctx.createOscillator();
+  const gain2 = ctx.createGain();
+
+  osc1.type = 'square';
+  osc2.type = 'square';
+
+  // 音程（上昇）
+  osc1.frequency.setValueAtTime(800, now);
+  osc2.frequency.setValueAtTime(1200, now + 0.06);
+
+  gain1.gain.setValueAtTime(0.12, now);
+  gain1.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+
+  gain2.gain.setValueAtTime(0.12, now + 0.06);
+  gain2.gain.exponentialRampToValueAtTime(0.01, now + 0.14);
+
+  osc1.connect(gain1);
+  gain1.connect(ctx.destination);
+
+  osc2.connect(gain2);
+  gain2.connect(ctx.destination);
+
+  osc1.start(now);
+  osc1.stop(now + 0.1);
+
+  osc2.start(now + 0.06);
+  osc2.stop(now + 0.14);
+}
+  function playStartSound(){
+  const ctx = getCtx();
+    ctx.resume();
+    
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+
+  osc.type = 'square';
+
+  osc.frequency.setValueAtTime(400, ctx.currentTime);
+  osc.frequency.exponentialRampToValueAtTime(800, ctx.currentTime + 0.1);
+
+  gain.gain.setValueAtTime(0.2, ctx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
+
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+
+  osc.start();
+  osc.stop(ctx.currentTime + 0.1);
+}
+  let winLoopTimer = null;
+function playWinSound(){
+  const ctx = getCtx();
+ctx.resume();
+  const notes = [784, 988, 1174, 1568, 1976];
+  let pitchBoost = 1;
+
+if(state.colaStreak >= 3){
+  pitchBoost = 1 + ((state.colaStreak - 2) * 0.08);
+}
+  let t = ctx.currentTime;
+
+  notes.forEach((freq, i) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+
+    osc.type = 'square';
+   osc.frequency.setValueAtTime(freq * pitchBoost, t);
+    const vol = (i === notes.length - 1) ? 0.28 : 0.2;
+    const len = (i === notes.length - 1) ? 0.18 : 0.09;
+
+    gain.gain.setValueAtTime(vol, t);
+    gain.gain.exponentialRampToValueAtTime(0.01, t + len);
+
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+
+    osc.start(t);
+    osc.stop(t + len);
+
+    t += 0.075;
+  });
+}
+  function playStepSound(){
+  const ctx = getCtx();
+    ctx.resume();
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+
+  osc.type = 'square';
+  osc.frequency.setValueAtTime(250, ctx.currentTime);
+
+  gain.gain.setValueAtTime(0.08, ctx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.05);
+
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+
+  osc.start();
+  osc.stop(ctx.currentTime + 0.05);
+}
+  function playFallSound(){
+  const ctx = getCtx();
+    ctx.resume();
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+
+  osc.type = 'sawtooth';
+
+  osc.frequency.setValueAtTime(500, ctx.currentTime);
+  osc.frequency.exponentialRampToValueAtTime(60, ctx.currentTime + 0.5);
+
+  gain.gain.setValueAtTime(0.12, ctx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.5);
+
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+
+  osc.start();
+  osc.stop(ctx.currentTime + 0.5);
+}
+  function playLandSound(){
+  const ctx = getCtx();
+    ctx.resume();
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+
+  osc.type = 'square';
+
+  osc.frequency.setValueAtTime(120, ctx.currentTime);
+  osc.frequency.exponentialRampToValueAtTime(40, ctx.currentTime + 0.2);
+
+  gain.gain.setValueAtTime(0.25, ctx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.2);
+
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+
+  osc.start();
+  osc.stop(ctx.currentTime + 0.2);
+}
+document.getElementById('musicBtn').onclick = () => {
+  const ctx = getCtx();
+  ctx.resume().then(() => {
+    const bgm = document.getElementById('bgmTitle');
+    bgm.currentTime = 0;
+    bgm.play().catch(() => {});
+  });
+};
+ const titleChar = document.getElementById('titleChar');
+titleChar.addEventListener('touchstart', () => {
+  clones.push({
+    x: 0,
+    y: 0,
+    vx: Math.random()*6 - 3,
+    vy: Math.random()*6 - 3
+  });
+});
+const titleCtx = titleChar.getContext('2d');
+
+function drawTitleChar() {
+  titleCtx.clearRect(0, 0, 140, 140);
+
+  const offsetX = Math.sin(Date.now() * 0.025) * 3;
+  const offsetY = Math.sin(Date.now() * 0.025) * 2;
+
+  titleCtx.save();
+  titleCtx.translate(50 + offsetX, 28 + offsetY);
+
+  const s = 5;
+  const colors = [
+    '',
+    '#f5c48a',
+    '#3a1a00',
+    '#e02020',
+    '#ffffff',
+    '#202020',
+    '#ffffff',
+    '#ff4040'
+  ];
+
+  const px = [
+    [0,0,2,2,2,0,0,0],
+    [0,0,1,1,1,0,0,0],
+    [0,0,1,6,1,0,0,0],
+    [0,2,1,1,1,2,0,0],
+    [0,0,3,3,3,0,0,0],
+    [0,3,3,3,3,3,0,0],
+    [0,0,3,3,3,0,0,0],
+    [0,0,4,4,4,0,0,0],
+    [0,0,4,4,4,0,0,0],
+    [0,5,0,0,0,5,0,0],
+    [0,5,0,0,0,5,0,0],
+    [0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0],
+    [0,0,0,0,0,0,0,0],
+  ];
+
+  for(let r=0;r<16;r++){
+    for(let c=0;c<8;c++){
+      const v = px[r][c];
+      if(!v) continue;
+      titleCtx.fillStyle = colors[v];
+      titleCtx.fillRect(c*s, r*s, s, s);
+    }
+  }
+
+  titleCtx.restore();
+
+  clones.forEach(c => {
+    c.x += c.vx;
+    c.y += c.vy;
+    c.vy += 0.2;
+
+    titleCtx.save();
+    titleCtx.translate(50 + offsetX + c.x, 28 + offsetY + c.y);
+
+    for(let r=0;r<16;r++){
+      for(let col=0;col<8;col++){
+        const v = px[r][col];
+        if(!v) continue;
+        titleCtx.fillStyle = colors[v];
+        titleCtx.fillRect(col*s, r*s, s, s);
+      }
+    }
+
+    titleCtx.restore();
+  });
+
+  clones = clones.filter(c => c.y < 160);
+}
+
+setInterval(drawTitleChar, 16);
+
+
+</script>
+<button id="mapBackBtn" onclick="location.href='index.html'"
+  style="
+    position:fixed;
+    left:50%;
+    bottom:20px;
+    transform:translateX(-50%);
+    padding:12px 20px;
+    border-radius:999px;
+    border:none;
+    background:#333;
+    color:#fff;
+    font-weight:bold;
+   font-size:18px;
+    z-index:9999;
+  ">
+  🛸 MAP
+</button>
+</body>
+</html>
