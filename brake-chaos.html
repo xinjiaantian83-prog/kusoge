@@ -293,7 +293,10 @@ function drawCar(x, y) {
   px(xi + 36, yi - 30, 10, 12, '#7adeff');
   // Rear window (left side)
   px(xi + 14, yi - 30, 10, 12, '#7adeff');
-
+   // Driver face (always visible)
+  px(xi + 37, yi - 27, 6, 6, '#fca');
+  px(xi + 38, yi - 26, 1, 1, '#000');
+  px(xi + 41, yi - 26, 1, 1, '#000');
   // Window pillar
   px(xi + 24, yi - 30,  3, 12, '#e09030');
 
@@ -451,8 +454,12 @@ function ejectDriver() {
   ];
   const v = vectors[Math.floor(Math.random() * vectors.length)];
   // Driver sits on top of car, slightly right of center
-  drv.x     = CAR_X + 26;
-  drv.y     = carY  - 36;
+   // 車内の顔と同じ位置から飛び出す
+  const baseX = state === S.STOP ? CAR_X + 41 : CAR_X + 37;
+  const baseY = state === S.STOP ? carY - 30 : carY - 27;
+
+  drv.x = baseX;
+  drv.y = baseY;
   drv.vx    = v.vx + (Math.random() - 0.5) * 2;
   drv.vy    = v.vy + (Math.random() - 0.5) * 2;
   drv.angle = 0;
