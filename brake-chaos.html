@@ -116,6 +116,7 @@ canvas {
   </div>
   <div id="credit">© TOMARE INDUSTRIES  INSERT COIN</div>
 </div>
+  <audio id="bgm" src="kaazoom-honkytonk-jam-rockabilly-music-403469.mp3" loop></audio>
 <script>
   let audioCtx;
 let isPlaying = false;
@@ -540,7 +541,10 @@ function update() {
 }
   if (hitstop > 0) { hitstop--; return; }
   frame++;
-
+  const bgm = document.getElementById('bgm');
+  if (bgm && !bgm.paused) {
+    bgm.playbackRate = 1 + speedDisp * 0.001;
+  }
   // Road speed increases over time
  const roadSpd = 5 + speedDisp * 0.08;
   if (state === S.RUN) {
@@ -642,7 +646,19 @@ function loop() { update(); draw(); requestAnimationFrame(loop); }
 
 // ── Brake ──────────────────────────────────────────────────
 function onBrake() {
-  startBGM();
+
+  const bgm = document.getElementById('bgm');
+  if (bgm) {
+    bgm.currentTime = 0;
+    bgm.play().catch(()=>{});
+  }
+
+  if (state !== S.RUN) return;
+
+  state = S.STOP;
+  hitstop = 12;
+  ...
+}
   slowTimer = 10; // ← 約0.16秒止まる
   if (state !== S.RUN) return;
   state       = S.STOP;
