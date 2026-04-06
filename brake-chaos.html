@@ -491,6 +491,10 @@ function update() {
   }
   if (hitstop > 0) { hitstop--; return; }
   frame++;
+  const bgm = document.getElementById('bgm');
+if (bgm && !bgm.paused) {
+  bgm.playbackRate = Math.min(1.15, 1 + speedDisp * 0.00008);
+}
  // const bgm = document.getElementById('bgm');
  // if (bgm && !bgm.paused) {
   // bgm.playbackRate = Math.min(1.6, 1 + speedDisp * 0.00035);
