@@ -118,41 +118,7 @@ canvas {
 </div>
   <audio id="bgm" src="kaazoom-honkytonk-jam-rockabilly-music-403469.mp3" loop></audio>
 <script>
-  let audioCtx;
-let isPlaying = false;
 
-function startBGM(){
-  if(isPlaying) return;
-  isPlaying = true;
-
-  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-
-  const tempo = 120;
-  const interval = 60000 / tempo;
-
-  function playBeat(){
-  const t = audioCtx.currentTime;
-
-  // 🟠 キック（1拍目）
-  const kick = audioCtx.createOscillator();
-  const kgain = audioCtx.createGain();
-  kick.type = 'square'; // ←ちょい荒くする
-  kick.frequency.setValueAtTime(100, t);
-  kgain.gain.setValueAtTime(0.6, t);
-  kgain.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
-  kick.connect(kgain).connect(audioCtx.destination);
-  kick.start(t);
-  kick.stop(t + 0.12);
-
-  // 🟠 スネア（ちょい遅らせる = 跳ね）
-  const snareTime = t + 0.18; // ←ここがキモ（ズラし）
-
-  const noise = audioCtx.createBufferSource();
-  const buffer = audioCtx.createBuffer(1, audioCtx.sampleRate * 0.2, audioCtx.sampleRate);
-  const data = buffer.getChannelData(0);
-  for(let i=0;i<data.length;i++){
-    data[i] = Math.random()*2-1;
-  }
   noise.buffer = buffer;
 
   const nGain = audioCtx.createGain();
@@ -645,7 +611,6 @@ function loop() { update(); draw(); requestAnimationFrame(loop); }
 
 // ── Brake ──────────────────────────────────────────────────
 function onBrake() {
-
   const bgm = document.getElementById('bgm');
   if (bgm) {
     bgm.currentTime = 0;
@@ -654,12 +619,7 @@ function onBrake() {
 
   if (state !== S.RUN) return;
 
-  state = S.STOP;
-  hitstop = 12;
-  ...
-}
-  slowTimer = 10; // ← 約0.16秒止まる
-  if (state !== S.RUN) return;
+  slowTimer   = 10;
   state       = S.STOP;
   hitstop     = 12;
   flashF      = 8;
@@ -670,11 +630,12 @@ function onBrake() {
   carVY       = 0;
   exScore     = Math.floor(Math.random() * 89999999) + 10000000;
   elScore.textContent = String(exScore).padStart(7, '0');
- setTimeout(() => {
-  slowTimer = 6; // ← 飛ぶ瞬間もう一回止める
-  state = S.FLY;
-  ejectDriver();
-}, 230);
+
+  setTimeout(() => {
+    slowTimer = 6;
+    state = S.FLY;
+    ejectDriver();
+  }, 230);
 }
 
 // ── Input ──────────────────────────────────────────────────
