@@ -119,31 +119,7 @@ canvas {
   <audio id="bgm" src="kaazoom-honkytonk-jam-rockabilly-music-403469.mp3" loop></audio>
 <script>
 
-  noise.buffer = buffer;
-
-  const nGain = audioCtx.createGain();
-  nGain.gain.setValueAtTime(0.25, snareTime);
-  nGain.gain.exponentialRampToValueAtTime(0.01, snareTime + 0.15);
-
-  noise.connect(nGain).connect(audioCtx.destination);
-  noise.start(snareTime);
-  noise.stop(snareTime + 0.15);
-
-  // 🟠 ベース（ブンブン感）
-  const bass = audioCtx.createOscillator();
-  const bgain = audioCtx.createGain();
-  bass.type = 'square';
-  bass.frequency.setValueAtTime(80, t);
-  bgain.gain.setValueAtTime(0.3, t);
-  bgain.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
-  bass.connect(bgain).connect(audioCtx.destination);
-  bass.start(t);
-  bass.stop(t + 0.2);
-}
-  setInterval(() => {
-    playBeat();
-  }, interval);
-}
+  
 // ── Canvas setup ───────────────────────────────────────────
 const canvas = document.getElementById('c');
 const ctx    = canvas.getContext('2d');
