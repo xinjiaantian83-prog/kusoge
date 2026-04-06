@@ -125,7 +125,7 @@ canvas {
   </div>
   <div id="credit">© TOMARE INDUSTRIES  INSERT COIN</div>
 </div>
-  <audio id="bgm" src="kaazoom-honkytonk-jam-rockabilly-music-403469.mp3" loop></audio>
+<audio id="bgm" src="kaazoom-honkytonk-jam-rockabilly-music-403469.mp3" loop preload="auto"></audio>
 <script>
 
   
@@ -627,12 +627,7 @@ canvas.addEventListener('touchstart', e => { e.preventDefault(); onBrake(); }, {
 const startBtn = document.getElementById('start-btn');
 
 startBtn.addEventListener('click', () => {
-  alert('START押された');
-  console.log('START押された');
-
   const bgm = document.getElementById('bgm');
-  console.log('bgm=', bgm);
-
   if (bgm) {
     bgm.volume = 1;
     bgm.muted = false;
@@ -640,8 +635,11 @@ startBtn.addEventListener('click', () => {
       console.log('BGM再生成功');
     }).catch(err => {
       console.log('BGM再生失敗', err);
-      alert('BGM再生失敗: ' + err);
     });
+  }
+
+  startBtn.style.display = 'none';
+});
   }
 
   startBtn.style.display = 'none';
