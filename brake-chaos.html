@@ -177,6 +177,10 @@ function reset() {
   elDanger.style.width = '0%';
   elScore.textContent  = '0000000';
   elSpeed.textContent  = '080';
+  const bgm = document.getElementById('bgm');
+if (bgm) {
+  bgm.playbackRate = 1;
+}
 }
 reset();
 
@@ -491,10 +495,10 @@ function update() {
   }
   if (hitstop > 0) { hitstop--; return; }
   frame++;
-  const bgm = document.getElementById('bgm');
-if (bgm && !bgm.paused) {
-  bgm.playbackRate = Math.min(1.15, 1 + speedDisp * 0.00008);
-}
+ // const bgm = document.getElementById('bgm');
+//if (bgm && !bgm.paused) {
+//  bgm.playbackRate = Math.min(1.15, 1 + speedDisp * 0.00008);
+//}
  // const bgm = document.getElementById('bgm');
  // if (bgm && !bgm.paused) {
   // bgm.playbackRate = Math.min(1.6, 1 + speedDisp * 0.00035);
@@ -631,14 +635,18 @@ canvas.addEventListener('click', onBrake);
 canvas.addEventListener('touchstart', e => { e.preventDefault(); onBrake(); }, { passive:false });
 
 const startBtn = document.getElementById('start-btn');
-startBtn.addEventListener('click', () => {
+
+startBtn.addEventListener('click', async () => {
   const bgm = document.getElementById('bgm');
   if (bgm) {
-    bgm.volume = 1;
-    bgm.muted = false;
-    bgm.play().catch(err => {
+    try {
+      bgm.volume = 1;
+      bgm.muted = false;
+      await bgm.play();
+      console.log('BGM再生成功');
+    } catch (err) {
       console.log('BGM再生失敗', err);
-    });
+    }
   }
 
   startBtn.style.display = 'none';
