@@ -493,7 +493,7 @@ function update() {
   frame++;
   const bgm = document.getElementById('bgm');
   if (bgm && !bgm.paused) {
-    bgm.playbackRate = 1 + speedDisp * 0.001;
+   bgm.playbackRate = Math.min(1.6, 1 + speedDisp * 0.00035);
   }
   // Road speed increases over time
  const roadSpd = 5 + speedDisp * 0.08;
@@ -622,28 +622,24 @@ function onBrake() {
 const btn = document.getElementById('brake-btn');
 btn.addEventListener('click', onBrake);
 btn.addEventListener('touchstart', e => { e.preventDefault(); onBrake(); }, { passive:false });
+
 canvas.addEventListener('click', onBrake);
 canvas.addEventListener('touchstart', e => { e.preventDefault(); onBrake(); }, { passive:false });
-const startBtn = document.getElementById('start-btn');
 
+const startBtn = document.getElementById('start-btn');
 startBtn.addEventListener('click', () => {
   const bgm = document.getElementById('bgm');
   if (bgm) {
     bgm.volume = 1;
     bgm.muted = false;
-    bgm.play().then(() => {
-      console.log('BGM再生成功');
-    }).catch(err => {
+    bgm.play().catch(err => {
       console.log('BGM再生失敗', err);
     });
   }
 
   startBtn.style.display = 'none';
 });
-  }
 
-  startBtn.style.display = 'none';
-});
 loop();
 </script>
 </body>
