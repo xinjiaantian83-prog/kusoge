@@ -130,38 +130,49 @@ function startBGM(){
   const interval = 60000 / tempo;
 
   function playBeat(){
-    const t = audioCtx.currentTime;
+  const t = audioCtx.currentTime;
 
-    // キック
-    const kick = audioCtx.createOscillator();
-    const kgain = audioCtx.createGain();
-    kick.type = 'sine';
-    kick.frequency.setValueAtTime(120, t);
-    kick.frequency.exponentialRampToValueAtTime(40, t + 0.1);
-    kgain.gain.setValueAtTime(1, t);
-    kgain.gain.exponentialRampToValueAtTime(0.001, t + 0.1);
-    kick.connect(kgain).connect(audioCtx.destination);
-    kick.start(t);
-    kick.stop(t + 0.1);
+  // 🟠 キック（1拍目）
+  const kick = audioCtx.createOscillator();
+  const kgain = audioCtx.createGain();
+  kick.type = 'square'; // ←ちょい荒くする
+  kick.frequency.setValueAtTime(100, t);
+  kgain.gain.setValueAtTime(0.6, t);
+  kgain.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
+  kick.connect(kgain).connect(audioCtx.destination);
+  kick.start(t);
+  kick.stop(t + 0.12);
 
-    // スネア
-    const noise = audioCtx.createBufferSource();
-    const buffer = audioCtx.createBuffer(1, audioCtx.sampleRate * 0.2, audioCtx.sampleRate);
-    const data = buffer.getChannelData(0);
-    for(let i=0;i<data.length;i++){
-      data[i] = Math.random()*2-1;
-    }
-    noise.buffer = buffer;
+  // 🟠 スネア（ちょい遅らせる = 跳ね）
+  const snareTime = t + 0.18; // ←ここがキモ（ズラし）
 
-    const nGain = audioCtx.createGain();
-    nGain.gain.setValueAtTime(0.3, t + 0.1);
-    nGain.gain.exponentialRampToValueAtTime(0.01, t + 0.2);
-
-    noise.connect(nGain).connect(audioCtx.destination);
-    noise.start(t + 0.1);
-    noise.stop(t + 0.2);
+  const noise = audioCtx.createBufferSource();
+  const buffer = audioCtx.createBuffer(1, audioCtx.sampleRate * 0.2, audioCtx.sampleRate);
+  const data = buffer.getChannelData(0);
+  for(let i=0;i<data.length;i++){
+    data[i] = Math.random()*2-1;
   }
+  noise.buffer = buffer;
 
+  const nGain = audioCtx.createGain();
+  nGain.gain.setValueAtTime(0.25, snareTime);
+  nGain.gain.exponentialRampToValueAtTime(0.01, snareTime + 0.15);
+
+  noise.connect(nGain).connect(audioCtx.destination);
+  noise.start(snareTime);
+  noise.stop(snareTime + 0.15);
+
+  // 🟠 ベース（ブンブン感）
+  const bass = audioCtx.createOscillator();
+  const bgain = audioCtx.createGain();
+  bass.type = 'square';
+  bass.frequency.setValueAtTime(80, t);
+  bgain.gain.setValueAtTime(0.3, t);
+  bgain.gain.exponentialRampToValueAtTime(0.001, t + 0.2);
+  bass.connect(bgain).connect(audioCtx.destination);
+  bass.start(t);
+  bass.stop(t + 0.2);
+}
   setInterval(() => {
     playBeat();
   }, interval);
