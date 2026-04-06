@@ -130,6 +130,7 @@ const elDanger = document.getElementById('danger-fill');
 // ── State ──────────────────────────────────────────────────
 const S = { RUN:0, STOP:1, FLY:2, RESULT:3 };
 let state, frame, speedDisp, speedTarget;
+  let slowTimer = 0;
 let scroll;        // ground/road scroll offset
 let cliffX;        // cliff left edge in screen coords
 let carX, carY, carVY; // car pos (carX fixed, carY for falling)
@@ -462,6 +463,10 @@ function ejectDriver() {
 
 // ── Update ─────────────────────────────────────────────────
 function update() {
+  if (slowTimer > 0) {
+  slowTimer--;
+  return;
+}
   if (hitstop > 0) { hitstop--; return; }
   frame++;
 
@@ -554,6 +559,7 @@ function loop() { update(); draw(); requestAnimationFrame(loop); }
 
 // ── Brake ──────────────────────────────────────────────────
 function onBrake() {
+  slowTimer = 10; // ← 約0.16秒止まる
   if (state !== S.RUN) return;
   state       = S.STOP;
   hitstop     = 12;
@@ -565,7 +571,11 @@ function onBrake() {
   carVY       = 0;
   exScore     = Math.floor(Math.random() * 89999999) + 10000000;
   elScore.textContent = String(exScore).padStart(7, '0');
-  setTimeout(() => { state = S.FLY; ejectDriver(); }, 230);
+ setTimeout(() => {
+  slowTimer = 6; // ← 飛ぶ瞬間もう一回止める
+  state = S.FLY;
+  ejectDriver();
+}, 230);
 }
 
 // ── Input ──────────────────────────────────────────────────
