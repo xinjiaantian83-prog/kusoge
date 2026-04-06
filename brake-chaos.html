@@ -491,10 +491,10 @@ function update() {
   }
   if (hitstop > 0) { hitstop--; return; }
   frame++;
-  const bgm = document.getElementById('bgm');
-  if (bgm && !bgm.paused) {
-   bgm.playbackRate = Math.min(1.6, 1 + speedDisp * 0.00035);
-  }
+ // const bgm = document.getElementById('bgm');
+ // if (bgm && !bgm.paused) {
+  // bgm.playbackRate = Math.min(1.6, 1 + speedDisp * 0.00035);
+//  }
   // Road speed increases over time
  const roadSpd = 5 + speedDisp * 0.08;
   if (state === S.RUN) {
