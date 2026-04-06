@@ -337,13 +337,17 @@ function drawCar(x, y) {
   px(xi + 42, yi - 1,   2,  2, '#888');
 
   // Speed lines (horizontal, to the left)
-  if (state === S.RUN || state === S.FLY) {
-    ctx.fillStyle = 'rgba(255,180,0,0.22)';
-    for (let i = 0; i < 5; i++) {
-      const lw = 12 + i * 6;
-      ctx.fillRect(xi - 6 - lw, yi - 28 + i * 5, lw, 2);
-    }
+ if (state === S.RUN || state === S.FLY) {
+  ctx.fillStyle = 'rgba(255,180,0,0.25)';
+
+  const boost = Math.min(3, speedDisp / 200);
+
+  for (let i = 0; i < 8; i++) {
+    const lw = 20 + i * 10 * boost;
+    const y = yi - 28 + i * 4;
+    ctx.fillRect(xi - 10 - lw, y, lw, 2);
   }
+}
 }
 
 // ── Driver (small pixel person) ────────────────────────────
@@ -478,14 +482,13 @@ function update() {
   frame++;
 
   // Road speed increases over time
-  const roadSpd = 5 + frame * 0.01;
-
+ const roadSpd = 5 + speedDisp * 0.08;
   if (state === S.RUN) {
     scroll     += roadSpd;
     cliffX     -= roadSpd;          // cliff approaches at road speed
     cliffX     -= 0.3;              // + extra creep
 
-    speedTarget = Math.min(999, 80 + frame * 0.4);
+    speedTarget = 80 + frame * 0.9;
     speedDisp  += (speedTarget - speedDisp) * 0.06;
 
     // Danger bar: how close is cliff?
@@ -556,9 +559,16 @@ function draw() {
   // Scanlines
   ctx.fillStyle = 'rgba(0,0,0,0.09)';
   for (let y = 0; y < CH; y += 3) ctx.fillRect(0, y, CW, 1);
-
+if (speedDisp > 300) {
+  const shake = Math.min(6, (speedDisp - 300) * 0.02);
+  ctx.translate(
+    (Math.random() - 0.5) * shake,
+    (Math.random() - 0.5) * shake
+  );
+}
   drawFlash();
   drawResult();
+  ctx.restore();
 }
 
 // ── Loop ───────────────────────────────────────────────────
