@@ -627,10 +627,22 @@ canvas.addEventListener('touchstart', e => { e.preventDefault(); onBrake(); }, {
 const startBtn = document.getElementById('start-btn');
 
 startBtn.addEventListener('click', () => {
+  console.log('START押された');
+
   const bgm = document.getElementById('bgm');
+  console.log('bgm=', bgm);
+
   if (bgm) {
-    bgm.play().catch(()=>{});
+    bgm.volume = 1;
+    bgm.muted = false;
+    bgm.play().then(() => {
+      console.log('BGM再生成功');
+    }).catch(err => {
+      console.log('BGM再生失敗', err);
+      alert('BGM再生失敗: ' + err);
+    });
   }
+
   startBtn.style.display = 'none';
 });
 loop();
