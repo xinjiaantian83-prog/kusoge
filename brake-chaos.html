@@ -536,9 +536,8 @@ function ejectDriver() {
 // ── Update ─────────────────────────────────────────────────
 function update() {
   if (slowTimer > 0) {
-  slowTimer--;
-  return;
-}
+    slowTimer--;
+  }
   if (hitstop > 0) { hitstop--; return; }
   frame++;
   const bgm = document.getElementById('bgm');
