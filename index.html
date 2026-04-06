@@ -391,6 +391,10 @@ const state = {
 bonusTimer: 0,
 bonusColas: [],
 bonusCaught: 0,
+    danceMode: false,
+  danceTimer: 0,
+  danceCount: 1,
+  danceFrame: 0,
 };
 let clones = [];
 const boardDefs = [
@@ -429,7 +433,10 @@ function resetGame() {
 state.bonusTimer = 0;
 state.bonusColas = [];
 state.bonusCaught = 0;
- 
+   state.danceMode = false;
+  state.danceTimer = 0;
+  state.danceCount = 1;
+  state.danceFrame = 0;
   makeBoards();
    if(state.bottomShotStage){
     state.bottomShotWarn = 120;
@@ -655,8 +662,12 @@ function render() {
       }
     }
 
-    const y = Math.min(410, 80 + state.fallingDepth * 0.7);
-    drawPixelChar(state.playerX, y, state.dir, 'fall');
+    if(state.danceMode){
+  drawDanceScene();
+} else {
+  const y = Math.min(410, 80 + state.fallingDepth * 0.7);
+  drawPixelChar(state.playerX, y, state.dir, 'fall');
+}
 
     if(state.reverseStage){
       ctx.restore();
@@ -908,8 +919,35 @@ ctx.fillText('COKE', 292, 246);
 ctx.fillStyle = '#ff3030';
 ctx.fillText('COKE', 293, 247);
 }
+  function drawDanceScene(){
+  const baseY = 300;
+  const sway = Math.sin(state.danceFrame * 0.25) * 10;
+
+  if(state.danceCount === 1){
+    drawPixelChar(168 + sway, baseY, 1, 'normal');
+  } else {
+    drawPixelChar(110 + sway, baseY, 1, 'normal');
+    drawPixelChar(168 - sway, baseY - 8, -1, 'normal');
+    drawPixelChar(226 + sway, baseY, 1, 'normal');
+  }
+
+  ctx.fillStyle = '#f8d800';
+  ctx.font = 'bold 18px Courier New';
+  ctx.fillText('♪', 90, 120);
+  ctx.fillText('♪', 250, 150);
+  ctx.fillText('♪', 180, 95);
+
+  ctx.fillStyle = '#ffffff';
+  ctx.font = 'bold 14px Courier New';
+  ctx.fillText('DANCE', 145, 70);
+}
 function update() {
   state.score++;
+    if(state.danceMode){
+    state.danceFrame++;
+    if(state.danceTimer > 0) state.danceTimer--;
+    return;
+  }
   if(state.bonusStage){
   state.bonusTimer--;
 
@@ -1193,9 +1231,10 @@ function showFallEvent() {
   ]);
 } else if(state.eventType === 'rope'){
   showOverlay('', '', [
-    { label:'つかむ', cls:'btn-yes', action:() => resolveEvent(true) },
-    { label:'やめる', cls:'btn-no', action:() => resolveEvent(false) }
+    { label:'つかむ', cls:'btn-yes', action:() => startDanceEvent() },
+    { label:'やめる', cls:'btn-no', action:() => startDanceEvent() }
   ]);
+
 } else if(state.eventType === 'sign'){
   showOverlay('', '', [
     { label:'信じる', cls:'btn-yes', action:() => resolveEvent(true) },
@@ -1236,6 +1275,38 @@ function resolveEvent(yes) {
   // ガチ失敗
   showResult(false, 'wasted', fails[Math.floor(Math.random()*fails.length)]);
 }
+}
+  function startDanceEvent(){
+  hideOverlay();
+
+  state.danceMode = true;
+  state.danceTimer = 120;
+  state.danceCount = Math.random() < 0.7 ? 1 : 3;
+  state.danceFrame = 0;
+
+  setStatus('STAGE ' + state.stage, '踊ってる…', 'HP: 0');
+
+  setTimeout(() => {
+    state.danceMode = false;
+
+    const msgs1 = [
+      '1人で踊っていた。',
+      'なぜか踊り始めた。',
+      '助かる気はないらしい。'
+    ];
+
+    const msgs3 = [
+      '3人に増えていた。',
+      '仲間を呼んで踊っていた。',
+      'もう意味が分からない。'
+    ];
+
+    const msg = state.danceCount === 1
+      ? msgs1[Math.floor(Math.random() * msgs1.length)]
+      : msgs3[Math.floor(Math.random() * msgs3.length)];
+
+    showResult(false, '踊ってた', msg);
+  }, 2000);
 }
   function startBonusStage(){
   state.phase = 'walk';
