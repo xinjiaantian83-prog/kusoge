@@ -920,26 +920,27 @@ ctx.fillStyle = '#ff3030';
 ctx.fillText('COKE', 293, 247);
 }
   function drawDanceScene(){
-  const baseY = 300;
-  const sway = Math.sin(state.danceFrame * 0.25) * 10;
+  const bob = Math.sin(state.danceFrame * 0.18) * 6;
 
-  if(state.danceCount === 1){
-    drawPixelChar(168 + sway, baseY, 1, 'normal');
-  } else {
-    drawPixelChar(110 + sway, baseY, 1, 'normal');
-    drawPixelChar(168 - sway, baseY - 8, -1, 'normal');
-    drawPixelChar(226 + sway, baseY, 1, 'normal');
+  function drawBigChar(x, y, flip){
+    ctx.save();
+    ctx.translate(x, y + bob);
+    ctx.scale(1.8, 1.8);
+    drawPixelChar(0, 0, flip ? -1 : 1, 'normal');
+    ctx.restore();
   }
 
-  ctx.fillStyle = '#f8d800';
-  ctx.font = 'bold 18px Courier New';
-  ctx.fillText('♪', 90, 120);
-  ctx.fillText('♪', 250, 150);
-  ctx.fillText('♪', 180, 95);
+  if(state.danceCount === 1){
+    drawBigChar(145, 210, false);
+  } else {
+    drawBigChar(70, 225, false);
+    drawBigChar(145, 200, true);
+    drawBigChar(220, 225, false);
+  }
 
   ctx.fillStyle = '#ffffff';
   ctx.font = 'bold 14px Courier New';
-  ctx.fillText('DANCE', 145, 70);
+  ctx.fillText('……', 160, 80);
 }
 function update() {
   state.score++;
