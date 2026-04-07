@@ -150,6 +150,7 @@ let carFalling;
 let hitstop, flashF;
 let drv;
 let resultAlpha, resultTimer, exScore;
+let brakeAnim;
 
 // Layout constants
 const GROUND_Y = 148;  // top of ground strip
@@ -180,6 +181,7 @@ function reset() {
   const bgm = document.getElementById('bgm');
 if (bgm) {
   bgm.playbackRate = 1;
+  brakeAnim   = 1;
 }
 }
 reset();
@@ -290,82 +292,87 @@ function drawCliff(cx) {
 
 // ── Car (side view, facing right) ──────────────────────────
 function drawCar(x, y) {
-  // y = wheel-base Y
   const xi = x|0, yi = y|0;
+
+  ctx.save();
+
+  const brakeTilt = brakeAnim * -0.16;
+  const brakeDrop = brakeAnim * 6;
+
+  ctx.translate(xi + 28, yi - brakeDrop);
+  ctx.rotate(brakeTilt);
+  ctx.translate(-(xi + 28), -yi);
 
   // Shadow
   ctx.fillStyle = 'rgba(0,0,0,0.4)';
   ctx.fillRect(xi + 4, yi + 2, 54, 6);
 
-  // Body (long low rectangle)
-  px(xi,      yi - 18, 58, 16, '#d07020');  // main body
-  px(xi + 2,  yi - 18, 54, 14, '#e88830');  // highlight
+  // Body
+  px(xi,      yi - 18, 58, 16, '#d07020');
+  px(xi + 2,  yi - 18, 54, 14, '#e88830');
 
-  // Cabin / roof
+  // Cabin
   px(xi + 10, yi - 32, 30, 16, '#f0a040');
   px(xi + 12, yi - 30, 26, 12, '#f8b850');
 
-  // Windshield (front = right side)
+  // Windows
   px(xi + 36, yi - 30, 10, 12, '#7adeff');
-  // Rear window (left side)
   px(xi + 14, yi - 30, 10, 12, '#7adeff');
-   // Driver face (always visible)
+
+  // Driver
   px(xi + 37, yi - 27, 6, 6, '#fca');
   px(xi + 38, yi - 26, 1, 1, '#000');
   px(xi + 41, yi - 26, 1, 1, '#000');
-  // Window pillar
+
   px(xi + 24, yi - 30,  3, 12, '#e09030');
 
-  // Front bumper / nose
+  // Front
   px(xi + 54, yi - 14,  6,  8, '#b06010');
   px(xi + 56, yi - 20,  3,  6, '#cc7020');
 
-  // Headlight
   px(xi + 56, yi - 26,  4,  6, '#ffffcc');
   px(xi + 57, yi - 24,  3,  3, '#ffffff');
 
-  // Rear tail
+  // Rear
   px(xi,      yi - 16,  4,  6, '#cc2200');
   px(xi + 1,  yi - 15,  2,  3, '#ff4422');
 
-  // Spoiler (rear top)
+  // Spoiler
   px(xi + 2,  yi - 34,  5,  4, '#c06010');
   px(xi + 2,  yi - 37,  5,  2, '#f08020');
 
-  // Exhaust pipe (rear bottom)
+  // Exhaust
   px(xi,      yi -  4,  6,  3, '#666');
   px(xi - 4,  yi -  3,  5,  2, '#999');
 
   // Underbody
   px(xi + 6,  yi -  2, 46,  3, '#804010');
 
-  // Wheels (left=rear, right=front from side view)
-  // Rear wheel
+  // Wheels
   px(xi + 8,  yi - 6,  14, 10, '#111');
   px(xi + 10, yi - 5,  10,  8, '#2a2a2a');
-  px(xi + 13, yi - 2,   4,  4, '#555');  // hub
+  px(xi + 13, yi - 2,   4,  4, '#555');
   px(xi + 14, yi - 1,   2,  2, '#888');
 
-  // Front wheel
   px(xi + 36, yi - 6,  14, 10, '#111');
   px(xi + 38, yi - 5,  10,  8, '#2a2a2a');
   px(xi + 41, yi - 2,   4,  4, '#555');
   px(xi + 42, yi - 1,   2,  2, '#888');
 
-  // Speed lines (horizontal, to the left)
- if (state === S.RUN || state === S.FLY) {
-  ctx.fillStyle = 'rgba(255,180,0,0.25)';
+  // Speed lines
+  if (state === S.RUN || state === S.FLY) {
+    ctx.fillStyle = 'rgba(255,180,0,0.25)';
+    const boost = Math.min(3, speedDisp / 200);
 
-  const boost = Math.min(3, speedDisp / 200);
-
-  for (let i = 0; i < 8; i++) {
-    const lw = 20 + i * 10 * boost;
-    const y = yi - 28 + i * 4;
-    ctx.fillRect(xi - 10 - lw, y, lw, 2);
+    for (let i = 0; i < 8; i++) {
+      const lw = 20 + i * 10 * boost;
+      const yy = yi - 28 + i * 4;
+      ctx.fillRect(xi - 10 - lw, yy, lw, 2);
+    }
   }
-}
-}
 
+  ctx.restore();
+}
 // ── Driver (small pixel person) ────────────────────────────
 function drawDriver(d) {
   if (!d.active) return;
