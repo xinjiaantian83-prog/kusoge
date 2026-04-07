@@ -503,83 +503,78 @@ function update() {
     slowTimer--;
   }
 
-  
-
   if (hitstop > 0) {
     hitstop--;
     return;
   }
 
   frame++;
+const engine = document.getElementById('engine');
+if (engine && !engine.paused) {
+  engine.playbackRate = 0.6 + speedDisp * 0.005;
+}
+  
+
   // タイヤ痕更新
-skidMarks.forEach(s => {
-  s.x -= (5 + speedDisp * 0.08);
-  s.life--;
-});
-skidMarks = skidMarks.filter(s => s.life > 0);
- // const bgm = document.getElementById('bgm');
-//if (bgm && !bgm.paused) {
-//  bgm.playbackRate = Math.min(1.15, 1 + speedDisp * 0.00008);
-//}
- // const bgm = document.getElementById('bgm');
- // if (bgm && !bgm.paused) {
-  // bgm.playbackRate = Math.min(1.6, 1 + speedDisp * 0.00035);
-//  }
-  // Road speed increases over time
- const roadSpd = 5 + speedDisp * 0.08;
+  skidMarks.forEach(s => {
+    s.x -= (5 + speedDisp * 0.08);
+    s.life--;
+  });
+  skidMarks = skidMarks.filter(s => s.life > 0);
+
+  // Road speed
+  const roadSpd = 5 + speedDisp * 0.08;
+
   if (state === S.RUN) {
-    scroll     += roadSpd;
-    cliffX     -= roadSpd;          // cliff approaches at road speed
-    cliffX     -= 0.3;              // + extra creep
+    scroll += roadSpd;
+    cliffX -= roadSpd;
+    cliffX -= 0.3;
 
     speedTarget = 80 + frame * 0.9;
-    speedDisp  += (speedTarget - speedDisp) * 0.06;
+    speedDisp += (speedTarget - speedDisp) * 0.06;
 
-    // Danger bar: how close is cliff?
     const danger = Math.max(0, Math.min(100, (1 - (cliffX - CAR_X - 60) / (CW * 0.7)) * 100));
     elDanger.style.width = danger + '%';
 
-    // Car falls when it reaches cliff edge
-    //if (!carFalling && CAR_X + 60 >= cliffX) {
-     // carFalling = true; carVY = 0;
-   // }
     if (carFalling) {
       carVY += 0.6;
-      carY  += carVY;
-      scroll += roadSpd; // world keeps moving
+      carY += carVY;
+      scroll += roadSpd;
     }
+
     if (carY > CH + 60) {
-      state = S.RESULT; resultTimer = frame;
+      state = S.RESULT;
+      resultTimer = frame;
       setTimeout(reset, 2200);
     }
   }
+if (state === S.FLY) {
 
-  
-
-    // Car continues to cliff and falls
-    //if (!carFalling && CAR_X + 60 >= cliffX) {
-      //carFalling = true; carVY = 0;
-    //}
-    if (carFalling) {
-      carVY += 0.6;
-      carY  += carVY;
-    }
-
-    // Driver physics
-    drv.trail.push({ x: drv.x, y: drv.y, angle: drv.angle });
-    if (drv.trail.length > 9) drv.trail.shift();
-    drv.vy    += 0.27;
-    drv.x     += drv.vx;
-    drv.y     += drv.vy;
-    drv.angle += drv.spin;
-
-    // Show EXCELLENT after brief delay
-    if (resultTimer === 0) resultTimer = frame;
-    if (frame > resultTimer + 30) resultAlpha = Math.min(1, resultAlpha + 0.07);
-
-    const off = drv.x < -60 || drv.x > CW + 60 || drv.y > CH + 60 || drv.y < -130;
-    if (off && resultAlpha >= 1) state = S.RESULT;
+  // Car continues to cliff and falls
+  //if (!carFalling && CAR_X + 60 >= cliffX) {
+  //  carFalling = true; carVY = 0;
+  //}
+  if (carFalling) {
+    carVY += 0.6;
+    carY  += carVY;
   }
+
+  // Driver physics
+  drv.trail.push({ x: drv.x, y: drv.y, angle: drv.angle });
+  if (drv.trail.length > 9) drv.trail.shift();
+  drv.vy    += 0.27;
+  drv.x     += drv.vx;
+  drv.y     += drv.vy;
+  drv.angle += drv.spin;
+
+  // Show EXCELLENT after brief delay
+  if (resultTimer === 0) resultTimer = frame;
+  if (frame > resultTimer + 30) resultAlpha = Math.min(1, resultAlpha + 0.07);
+
+  const off = drv.x < -60 || drv.x > CW + 60 || drv.y > CH + 60 || drv.y < -130;
+  if (off && resultAlpha >= 1) state = S.RESULT;
+}
+  
 
   if (state === S.RESULT) {
     resultAlpha = Math.min(1, resultAlpha + 0.04);
@@ -588,10 +583,7 @@ skidMarks = skidMarks.filter(s => s.life > 0);
 
   elSpeed.textContent = String(Math.floor(speedDisp)).padStart(3, '0');
 }
-  const engine = document.getElementById('engine');
-if (engine && !engine.paused) {
-  engine.playbackRate = 0.6 + speedDisp * 0.005;
-}
+  
 
 // ── Draw ───────────────────────────────────────────────────
 function draw() {
@@ -615,7 +607,7 @@ skidMarks.forEach(s => {
   ctx.fillRect(s.x, s.y, 8, 2);
 });
   //drawCliff(cliffX);
-  drawCar(CAR_X, carY);
+  drawCar(110, CAR_DRAW_Y);
   if (drv.active) drawDriver(drv);
 
   // Scanlines
