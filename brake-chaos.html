@@ -143,6 +143,7 @@ const elDanger = document.getElementById('danger-fill');
 const S = { RUN:0, STOP:1, FLY:2, RESULT:3 };
 let state, frame, speedDisp, speedTarget;
   let slowTimer = 0;
+  let skidMarks = [];
 let scroll;        // ground/road scroll offset
 let cliffX;        // cliff left edge in screen coords
 let carX, carY, carVY; // car pos (carX fixed, carY for falling)
@@ -175,6 +176,8 @@ function reset() {
   resultAlpha = 0;
   resultTimer = 0;
   exScore     = 0;
+  skidMarks = [];
+  brakeAnim = 0;
   elDanger.style.width = '0%';
   elScore.textContent  = '0000000';
   elSpeed.textContent  = '080';
@@ -182,6 +185,14 @@ function reset() {
 if (bgm) {
   bgm.playbackRate = 1;
   brakeAnim   = 1;
+  // タイヤ痕スタート
+for (let i = 0; i < 12; i++) {
+  skidMarks.push({
+    x: CAR_X + 10 - i * 6,
+    y: GROUND_Y + 30,
+    life: 30
+  });
+}
 }
 }
 reset();
@@ -298,7 +309,11 @@ function drawCar(x, y) {
 
   const brakeTilt = brakeAnim * 0.22;
 const brakeDrop = brakeAnim * 4;
-
+if (brakeAnim > 0) {
+  ctx.translate(xi + 28, yi - brakeDrop);
+  ctx.rotate(brakeTilt);
+  ctx.translate(-(xi + 28), -yi);
+}
   ctx.translate(xi + 28, yi - brakeDrop);
   ctx.rotate(brakeTilt);
   ctx.translate(-(xi + 28), -yi);
@@ -497,6 +512,12 @@ function update() {
   }
   if (hitstop > 0) { hitstop--; return; }
   frame++;
+  // タイヤ痕更新
+skidMarks.forEach(s => {
+  s.x -= (5 + speedDisp * 0.08);
+  s.life--;
+});
+skidMarks = skidMarks.filter(s => s.life > 0);
  // const bgm = document.getElementById('bgm');
 //if (bgm && !bgm.paused) {
 //  bgm.playbackRate = Math.min(1.15, 1 + speedDisp * 0.00008);
@@ -587,6 +608,11 @@ function draw() {
 
   drawSky();
   drawGround();
+  // タイヤ痕描画
+ctx.fillStyle = 'rgba(0,0,0,0.5)';
+skidMarks.forEach(s => {
+  ctx.fillRect(s.x, s.y, 8, 2);
+});
   //drawCliff(cliffX);
   drawCar(CAR_X, carY);
   if (drv.active) drawDriver(drv);
