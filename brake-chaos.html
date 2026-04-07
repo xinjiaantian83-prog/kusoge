@@ -155,6 +155,15 @@ let drv;
 let resultAlpha, resultTimer, exScore;
 let brakeAnim;
 let lastExhaust = 0;
+  function playExhaust(){
+  const src = document.getElementById('exhaust');
+  if (!src) return;
+
+  const ex = src.cloneNode();
+  ex.volume = 0.9;
+  ex.playbackRate = 0.95 + Math.min(speedDisp, 120) * 0.003;
+  ex.play().catch(() => {});
+}
 // Layout constants
 const GROUND_Y = 148;  // top of ground strip
 const CAR_X    = 80;   // car always here horizontally
@@ -517,15 +526,10 @@ if (engine && !engine.paused) {
 }
   // 排気音（スピード依存）
 const now = Date.now();
-const interval = Math.max(120, 600 - speedDisp * 5);
+const interval = Math.max(180, 900 - speedDisp * 6);
 
-if (now - lastExhaust > interval) {
-  console.log("exhaust!");
-  const ex = document.getElementById('exhaust');
-  if (ex) {
-    ex.currentTime = 0;
-    ex.play().catch(() => {});
-  }
+if (speedDisp > 8 && now - lastExhaust > interval) {
+  playExhaust();
   lastExhaust = now;
 }
 
@@ -689,11 +693,11 @@ if (engine) {
   engine.play().catch(()=>{});
 }
   const bgm = document.getElementById('bgm');
-  if (bgm) {
-    try {
-      bgm.volume = 1;
-      bgm.muted = false;
-      await bgm.play();
+if (bgm) {
+  try {
+    bgm.volume = 0.12; // ←ここ変更（最重要）
+    bgm.muted = false;
+    await bgm.play();
       console.log('BGM再生成功');
     } catch (err) {
       console.log('BGM再生失敗', err);
