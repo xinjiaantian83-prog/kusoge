@@ -551,9 +551,7 @@ skidMarks = skidMarks.filter(s => s.life > 0);
     }
   }
 
-  if (state === S.FLY) {
-    scroll += roadSpd;
-    cliffX -= roadSpd;
+  
 
     // Car continues to cliff and falls
     //if (!carFalling && CAR_X + 60 >= cliffX) {
@@ -635,6 +633,8 @@ function onBrake() {
   state       = S.STOP;
   hitstop     = 12;
   flashF      = 8;
+  const bgm = document.getElementById('bgm');
+if (bgm) bgm.pause();
   brakeAnim   = 1.4;
 
 for (let i = 0; i < 12; i++) {
