@@ -199,34 +199,47 @@ function playBrakeSound(){
 
   const now = audioCtx.currentTime;
 
+  // ノイズ（タイヤ摩擦）
   const noise = audioCtx.createBufferSource();
   const buffer = audioCtx.createBuffer(1, 44100, 44100);
   const data = buffer.getChannelData(0);
 
   for (let i = 0; i < data.length; i++) {
-    data[i] = Math.random() * 2 - 1;
+    data[i] = (Math.random() * 2 - 1);
   }
 
   noise.buffer = buffer;
 
+  // 高めのキンキン成分（スキール感）
+  const osc = audioCtx.createOscillator();
+  osc.type = 'sawtooth';
+  osc.frequency.setValueAtTime(1200, now);
+  osc.frequency.exponentialRampToValueAtTime(400, now + 0.4);
+
+  // フィルター（痛い音に寄せる）
   const filter = audioCtx.createBiquadFilter();
   filter.type = 'bandpass';
-  filter.frequency.value = 800;
-  filter.Q.value = 1.5;
+  filter.frequency.setValueAtTime(1400, now);
+  filter.Q.value = 6;
 
+  // 音量（かなり強め）
   const gain = audioCtx.createGain();
   gain.gain.setValueAtTime(0.001, now);
-  gain.gain.exponentialRampToValueAtTime(0.6, now + 0.02);
-  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+  gain.gain.exponentialRampToValueAtTime(1.2, now + 0.02);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
 
+  // 接続
   noise.connect(filter);
+  osc.connect(filter);
   filter.connect(gain);
   gain.connect(audioCtx.destination);
 
   noise.start(now);
-  noise.stop(now + 0.25);
+  osc.start(now);
+
+  noise.stop(now + 0.6);
+osc.stop(now + 0.6);
 }
-  
 // Layout constants
 const GROUND_Y = 148;  // top of ground strip
 const CAR_X    = 80;   // car always here horizontally
