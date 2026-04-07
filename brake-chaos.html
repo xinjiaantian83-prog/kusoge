@@ -801,6 +801,21 @@ drawWindshield();
   ctx2.beginPath();
   ctx2.arc(160, 126, 52, Math.PI, Math.PI * 2);
   ctx2.stroke();
+    // 手（左）
+ctx2.fillStyle = '#fca';
+ctx2.fillRect(110, 100, 14, 10);
+
+// 指輪（左）
+ctx2.fillStyle = '#ff0';
+ctx2.fillRect(120, 103, 4, 3);
+
+// 手（右）
+ctx2.fillStyle = '#fca';
+ctx2.fillRect(196, 100, 14, 10);
+
+// 指輪（右）
+ctx2.fillStyle = '#ff0';
+ctx2.fillRect(196, 103, 4, 3);
 }
  function drawWindshield() {
   ctx3.clearRect(0, 0, windshield.width, windshield.height);
