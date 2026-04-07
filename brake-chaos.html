@@ -63,6 +63,12 @@ canvas {
   border-top:3px solid #f80;
   border-bottom:3px solid #f80;
 }
+  #windshield {
+  height:80px;
+  background:#081018;
+  border-top:3px solid #f80;
+  border-bottom:3px solid #f80;
+}
 #btn-area {
   width:100%;
   padding:10px;
@@ -125,6 +131,7 @@ canvas {
   </div>
   <div id="danger-bar"><div id="danger-fill"></div></div>
   <canvas id="c"></canvas>
+  <canvas id="windshield"></canvas>
   <canvas id="cockpit"></canvas>
   <button id="start-btn">▶ START</button>
   <div id="btn-area">
@@ -147,6 +154,10 @@ const cockpit = document.getElementById('cockpit');
 const ctx2 = cockpit.getContext('2d');
 cockpit.width = 320;
 cockpit.height = 120;
+  const windshield = document.getElementById('windshield');
+const ctx3 = windshield.getContext('2d');
+windshield.width = 320;
+windshield.height = 80;
 const elScore  = document.getElementById('score-val');
 const elSpeed  = document.getElementById('speed-val');
 const elDanger = document.getElementById('danger-fill');
@@ -712,8 +723,9 @@ skidMarks.forEach(s => {
   for (let y = 0; y < CH; y += 3) ctx.fillRect(0, y, CW, 1);
 
   drawFlash();
-  drawResult();
+drawResult();
 drawCockpit();
+drawWindshield();
   ctx.restore();
 }
   function drawCockpit() {
@@ -789,6 +801,62 @@ drawCockpit();
   ctx2.beginPath();
   ctx2.arc(160, 126, 52, Math.PI, Math.PI * 2);
   ctx2.stroke();
+}
+  function drawWindshield() {
+  ctx3.clearRect(0, 0, windshield.width, windshield.height);
+
+  // ガラス暗部
+  ctx3.fillStyle = '#081018';
+  ctx3.fillRect(0, 0, windshield.width, windshield.height);
+
+  // 上側の薄い反射
+  const grad = ctx3.createLinearGradient(0, 0, 0, 80);
+  grad.addColorStop(0, 'rgba(80,180,255,0.08);
+  grad.addColorStop(0.35, 'rgba(40,90,140,0.08)');
+  grad.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx3.fillStyle = grad;
+  ctx3.fillRect(0, 0, windshield.width, windshield.height);
+
+  // 高速ライン
+  ctx3.strokeStyle = 'rgba(120,220,255,0.22)';
+  ctx3.lineWidth = 2;
+
+  const speedLineOffset = (frame * (1 + speedDisp * 0.02)) % 40;
+ for (let i = -1; i < 6; i++) {
+  const y = i * 18 + speedLineOffset;
+
+  ctx3.beginPath();
+  ctx3.moveTo(0, y);
+  ctx3.lineTo(320, y - (speedDisp * 0.02));
+  ctx3.stroke();
+}
+
+  // 左右のガラス枠
+  ctx3.fillStyle = '#000';
+  ctx3.beginPath();
+  ctx3.moveTo(0, 0);
+  ctx3.lineTo(24, 0);
+  ctx3.lineTo(54, 80);
+  ctx3.lineTo(0, 80);
+  ctx3.closePath();
+  ctx3.fill();
+
+  ctx3.beginPath();
+  ctx3.moveTo(320, 0);
+  ctx3.lineTo(296, 0);
+  ctx3.lineTo(266, 80);
+  ctx3.lineTo(320, 80);
+  ctx3.closePath();
+  ctx3.fill();
+
+  // ダッシュボード上端
+  ctx3.fillStyle = '#111';
+  ctx3.fillRect(0, 68, 320, 12);
+
+  // 枠線
+  ctx3.strokeStyle = '#2b2f38';
+  ctx3.lineWidth = 2;
+  ctx3.strokeRect(1, 1, 318, 78);
 }
 // ── Loop ───────────────────────────────────────────────────
 function loop() { update(); draw(); requestAnimationFrame(loop); }
