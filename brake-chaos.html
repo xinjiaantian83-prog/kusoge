@@ -712,15 +712,9 @@ if (exhaustSrc && exhaustPool.length === 0) {
   
   const bgm = document.getElementById('bgm');
 if (bgm) {
-  try {
-    bgm.volume = 0.12; // ←ここ変更（最重要）
-    bgm.muted = false;
-    await bgm.play();
-      console.log('BGM再生成功');
-    } catch (err) {
-      console.log('BGM再生失敗', err);
-    }
-  }
+  bgm.pause();
+  bgm.currentTime = 0;
+}
 
   startBtn.style.display = 'none';
 });
