@@ -181,18 +181,9 @@ function reset() {
   elDanger.style.width = '0%';
   elScore.textContent  = '0000000';
   elSpeed.textContent  = '080';
-  const bgm = document.getElementById('bgm');
+ const bgm = document.getElementById('bgm');
 if (bgm) {
   bgm.playbackRate = 1;
-  brakeAnim   = 1;
-  // タイヤ痕スタート
-for (let i = 0; i < 12; i++) {
-  skidMarks.push({
-    x: CAR_X + 10 - i * 6,
-    y: GROUND_Y + 30,
-    life: 30
-  });
-}
 }
 }
 reset();
@@ -309,14 +300,12 @@ function drawCar(x, y) {
 
   const brakeTilt = brakeAnim * 0.22;
 const brakeDrop = brakeAnim * 4;
+
 if (brakeAnim > 0) {
   ctx.translate(xi + 28, yi - brakeDrop);
   ctx.rotate(brakeTilt);
   ctx.translate(-(xi + 28), -yi);
 }
-  ctx.translate(xi + 28, yi - brakeDrop);
-  ctx.rotate(brakeTilt);
-  ctx.translate(-(xi + 28), -yi);
 
   // Shadow
   ctx.fillStyle = 'rgba(0,0,0,0.4)';
@@ -510,7 +499,17 @@ function update() {
   if (slowTimer > 0) {
     slowTimer--;
   }
-  if (hitstop > 0) { hitstop--; return; }
+
+  if (brakeAnim > 0) {
+    brakeAnim *= 0.82;
+    if (brakeAnim < 0.01) brakeAnim = 0;
+  }
+
+  if (hitstop > 0) {
+    hitstop--;
+    return;
+  }
+
   frame++;
   // タイヤ痕更新
 skidMarks.forEach(s => {
@@ -639,6 +638,15 @@ function onBrake() {
   state       = S.STOP;
   hitstop     = 12;
   flashF      = 8;
+  brakeAnim   = 1;
+
+for (let i = 0; i < 12; i++) {
+  skidMarks.push({
+    x: CAR_X + 10 - i * 6,
+    y: GROUND_Y + 30,
+    life: 30
+  });
+}
   resultAlpha = 0;
   resultTimer = 0;
   carFalling  = false;
