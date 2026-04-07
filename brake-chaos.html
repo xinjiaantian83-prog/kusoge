@@ -161,6 +161,39 @@ let audioCtx;
   let exhaustEnabled = true;
 function playExhaust(){
   if (!audioCtx) return;
+
+  const now = audioCtx.currentTime;
+
+  const osc1 = audioCtx.createOscillator();
+  const osc2 = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  const filter = audioCtx.createBiquadFilter();
+
+  osc1.type = 'sawtooth';
+  osc2.type = 'square';
+
+  osc1.frequency.setValueAtTime(42 + speedDisp * 0.35, now);
+  osc2.frequency.setValueAtTime(21 + speedDisp * 0.18, now);
+
+  filter.type = 'lowpass';
+  filter.frequency.setValueAtTime(120, now);
+  filter.Q.value = 0.8;
+
+  gain.gain.setValueAtTime(0.001, now);
+  gain.gain.exponentialRampToValueAtTime(0.22, now + 0.01);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+
+  osc1.connect(filter);
+  osc2.connect(filter);
+  filter.connect(gain);
+  gain.connect(audioCtx.destination);
+
+  osc1.start(now);
+  osc2.start(now);
+  osc1.stop(now + 0.05);
+  osc2.stop(now + 0.05);
+}
+
 function playBrakeSound(){
   if (!audioCtx) return;
 
@@ -252,6 +285,7 @@ if (engine) engine.pause();
   skidMarks = [];
   brakeAnim = 0;
   lastExhaust = 0;
+  exhaustEnabled = true;
   elDanger.style.width = '0%';
   elScore.textContent  = '0000000';
   elSpeed.textContent  = '080';
