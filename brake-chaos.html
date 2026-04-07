@@ -307,47 +307,42 @@ const brakeDrop = brakeAnim * 4;
   ctx.fillStyle = 'rgba(0,0,0,0.4)';
   ctx.fillRect(xi + 4, yi + 2, 54, 6);
 
-  // Body
-  px(xi,      yi - 18, 58, 16, '#d07020');
-  px(xi + 2,  yi - 18, 54, 14, '#e88830');
+  // Body（デロリアン風）
+px(xi + 2,  yi - 14, 58, 10, '#7f7f7f');
+px(xi + 4,  yi - 15, 54, 4,  '#c8c8c8');
+px(xi + 8,  yi - 22, 38, 8,  '#9a9a9a');
 
-  // Cabin
-  px(xi + 10, yi - 32, 30, 16, '#f0a040');
-  px(xi + 12, yi - 30, 26, 12, '#f8b850');
+// Front nose
+px(xi + 56, yi - 13, 8, 5, '#8a8a8a');
+px(xi + 60, yi - 16, 4, 3, '#bcbcbc');
 
-  // Windows
-  px(xi + 36, yi - 30, 10, 12, '#7adeff');
-  px(xi + 14, yi - 30, 10, 12, '#7adeff');
+// Windows
+px(xi + 15, yi - 21, 10, 6, '#7adeff');
+px(xi + 31, yi - 21, 11, 6, '#7adeff');
 
-  // Driver
-  px(xi + 37, yi - 27, 6, 6, '#fca');
-  px(xi + 38, yi - 26, 1, 1, '#000');
-  px(xi + 41, yi - 26, 1, 1, '#000');
+// Driver
+px(xi + 33, yi - 20, 5, 5, '#fca');
+px(xi + 34, yi - 19, 1, 1, '#000');
+px(xi + 36, yi - 19, 1, 1, '#000');
 
-  px(xi + 24, yi - 30,  3, 12, '#e09030');
+// Door line
+px(xi + 28, yi - 22, 2, 10, '#666');
 
-  // Front
-  px(xi + 54, yi - 14,  6,  8, '#b06010');
-  px(xi + 56, yi - 20,  3,  6, '#cc7020');
+// Front light
+px(xi + 61, yi - 19, 3, 3, '#9fffff');
 
-  px(xi + 56, yi - 26,  4,  6, '#ffffcc');
-  px(xi + 57, yi - 24,  3,  3, '#ffffff');
+// Rear machine unit
+px(xi - 2,  yi - 18, 10, 8, '#5e5e5e');
+px(xi - 6,  yi - 23, 6, 6,  '#8f8f8f');
+px(xi - 8,  yi - 16, 5, 4,  '#3f3f3f');
+px(xi - 1,  yi - 22, 3, 2,  '#0ff');
+px(xi - 5,  yi - 18, 3, 2,  '#0ff');
 
-  // Rear
-  px(xi,      yi - 16,  4,  6, '#cc2200');
-  px(xi + 1,  yi - 15,  2,  3, '#ff4422');
+// Rear light
+px(xi + 2,  yi - 12, 3, 4, '#f44');
 
-  // Spoiler
-  px(xi + 2,  yi - 34,  5,  4, '#c06010');
-  px(xi + 2,  yi - 37,  5,  2, '#f08020');
-
-  // Exhaust
-  px(xi,      yi -  4,  6,  3, '#666');
-  px(xi - 4,  yi -  3,  5,  2, '#999');
-
-  // Underbody
-  px(xi + 6,  yi -  2, 46,  3, '#804010');
-
+// Underbody
+px(xi + 8,  yi - 3, 44, 2, '#444');
   // Wheels
   px(xi + 8,  yi - 6,  14, 10, '#111');
   px(xi + 10, yi - 5,  10,  8, '#2a2a2a');
