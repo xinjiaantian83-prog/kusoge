@@ -520,6 +520,7 @@ const now = Date.now();
 const interval = Math.max(120, 600 - speedDisp * 5);
 
 if (now - lastExhaust > interval) {
+  console.log("exhaust!");
   const ex = document.getElementById('exhaust');
   if (ex) {
     ex.currentTime = 0;
