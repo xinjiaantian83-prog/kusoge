@@ -203,10 +203,10 @@ if (engine) engine.pause();
   elSpeed.textContent  = '080';
  const bgm = document.getElementById('bgm');
 if (bgm) {
-  bgm.playbackRate = 1;
-  bgm.volume = 0.2;
+  bgm.pause();
+  bgm.currentTime = 0;
 }
-}
+
 reset();
 
 // ── Pixel helper ───────────────────────────────────────────
