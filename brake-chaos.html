@@ -199,46 +199,38 @@ function playBrakeSound(){
 
   const now = audioCtx.currentTime;
 
-  // ノイズ（タイヤ摩擦）
-  const noise = audioCtx.createBufferSource();
-  const buffer = audioCtx.createBuffer(1, 44100, 44100);
-  const data = buffer.getChannelData(0);
-
-  for (let i = 0; i < data.length; i++) {
-    data[i] = (Math.random() * 2 - 1);
-  }
-
-  noise.buffer = buffer;
-
-  // 高めのキンキン成分（スキール感）
-  const osc = audioCtx.createOscillator();
-  osc.type = 'sawtooth';
-  osc.frequency.setValueAtTime(1200, now);
-  osc.frequency.exponentialRampToValueAtTime(400, now + 0.4);
-
-  // フィルター（痛い音に寄せる）
-  const filter = audioCtx.createBiquadFilter();
-  filter.type = 'bandpass';
-  filter.frequency.setValueAtTime(1400, now);
-  filter.Q.value = 6;
-
-  // 音量（かなり強め）
+  const osc1 = audioCtx.createOscillator();
+  const osc2 = audioCtx.createOscillator();
   const gain = audioCtx.createGain();
-  gain.gain.setValueAtTime(0.001, now);
-  gain.gain.exponentialRampToValueAtTime(1.2, now + 0.02);
-  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+  const filter = audioCtx.createBiquadFilter();
 
-  // 接続
-  noise.connect(filter);
-  osc.connect(filter);
+  osc1.type = 'sawtooth';
+  osc2.type = 'triangle';
+
+  osc1.frequency.setValueAtTime(1100, now);
+  osc1.frequency.exponentialRampToValueAtTime(320, now + 0.22);
+
+  osc2.frequency.setValueAtTime(700, now);
+  osc2.frequency.exponentialRampToValueAtTime(220, now + 0.22);
+
+  filter.type = 'lowpass';
+  filter.frequency.setValueAtTime(1800, now);
+  filter.frequency.exponentialRampToValueAtTime(700, now + 0.22);
+  filter.Q.value = 0.7;
+
+  gain.gain.setValueAtTime(0.001, now);
+  gain.gain.exponentialRampToValueAtTime(0.22, now + 0.01);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+
+  osc1.connect(filter);
+  osc2.connect(filter);
   filter.connect(gain);
   gain.connect(audioCtx.destination);
 
-  noise.start(now);
-  osc.start(now);
-
-  noise.stop(now + 0.6);
-osc.stop(now + 0.6);
+  osc1.start(now);
+  osc2.start(now);
+  osc1.stop(now + 0.22);
+  osc2.stop(now + 0.22);
 }
 // Layout constants
 const GROUND_Y = 148;  // top of ground strip
