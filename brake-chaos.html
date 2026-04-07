@@ -161,19 +161,30 @@ let audioCtx;
 function playExhaust(){
   if (!audioCtx) return;
 
+  const now = audioCtx.currentTime;
+
   const osc = audioCtx.createOscillator();
   const gain = audioCtx.createGain();
+  const filter = audioCtx.createBiquadFilter();
 
-  osc.type = 'square';
-  osc.frequency.value = 80 + speedDisp * 2;
+  osc.type = 'sawtooth';
+  osc.frequency.setValueAtTime(55 + speedDisp * 1.2, now);
+  osc.frequency.exponentialRampToValueAtTime(38 + speedDisp * 0.6, now + 0.08);
 
-  gain.gain.value = 0.15;
+  filter.type = 'lowpass';
+  filter.frequency.value = 180;
+  filter.Q.value = 1.2;
 
-  osc.connect(gain);
+  gain.gain.setValueAtTime(0.001, now);
+  gain.gain.exponentialRampToValueAtTime(0.18, now + 0.005);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+
+  osc.connect(filter);
+  filter.connect(gain);
   gain.connect(audioCtx.destination);
 
-  osc.start();
-  osc.stop(audioCtx.currentTime + 0.05);
+  osc.start(now);
+  osc.stop(now + 0.08);
 }
 // Layout constants
 const GROUND_Y = 148;  // top of ground strip
