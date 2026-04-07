@@ -810,9 +810,9 @@ drawWindshield();
   ctx3.fillRect(0, 0, windshield.width, windshield.height);
 
   // 上側の薄い反射
-  const grad = ctx3.createLinearGradient(0, 0, 0, 80);
-  grad.addColorStop(0, 'rgba(80,180,255,0.08);
-  grad.addColorStop(0.35, 'rgba(40,90,140,0.08)');
+ const grad = ctx3.createLinearGradient(0, 0, 0, 80);
+grad.addColorStop(0, 'rgba(80,180,255,0.08)');
+grad.addColorStop(0.35, 'rgba(40,90,140,0.08)');
   grad.addColorStop(1, 'rgba(0,0,0,0)');
   ctx3.fillStyle = grad;
   ctx3.fillRect(0, 0, windshield.width, windshield.height);
