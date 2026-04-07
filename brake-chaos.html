@@ -298,8 +298,8 @@ function drawCar(x, y) {
 
   ctx.save();
 
-  const brakeTilt = brakeAnim * 0.22;
-const brakeDrop = brakeAnim * 4;
+ const brakeTilt = brakeAnim * -0.5;
+const brakeDrop = brakeAnim * 8;
 
 if (brakeAnim > 0) {
   ctx.translate(xi + 28, yi - brakeDrop);
@@ -500,10 +500,7 @@ function update() {
     slowTimer--;
   }
 
-  if (brakeAnim > 0) {
-    brakeAnim *= 0.82;
-    if (brakeAnim < 0.01) brakeAnim = 0;
-  }
+  
 
   if (hitstop > 0) {
     hitstop--;
@@ -638,7 +635,7 @@ function onBrake() {
   state       = S.STOP;
   hitstop     = 12;
   flashF      = 8;
-  brakeAnim   = 1;
+  brakeAnim   = 1.4;
 
 for (let i = 0; i < 12; i++) {
   skidMarks.push({
