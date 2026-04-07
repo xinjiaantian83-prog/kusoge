@@ -163,28 +163,34 @@ function playExhaust(){
 
   const now = audioCtx.currentTime;
 
-  const osc = audioCtx.createOscillator();
+  const osc1 = audioCtx.createOscillator();
+  const osc2 = audioCtx.createOscillator();
   const gain = audioCtx.createGain();
   const filter = audioCtx.createBiquadFilter();
 
-  osc.type = 'sawtooth';
-  osc.frequency.setValueAtTime(55 + speedDisp * 1.2, now);
-  osc.frequency.exponentialRampToValueAtTime(38 + speedDisp * 0.6, now + 0.08);
+  osc1.type = 'sawtooth';
+  osc2.type = 'square';
+
+  osc1.frequency.setValueAtTime(42 + speedDisp * 0.35, now);
+  osc2.frequency.setValueAtTime(21 + speedDisp * 0.18, now);
 
   filter.type = 'lowpass';
-  filter.frequency.value = 180;
-  filter.Q.value = 1.2;
+  filter.frequency.setValueAtTime(120, now);
+  filter.Q.value = 0.8;
 
   gain.gain.setValueAtTime(0.001, now);
-  gain.gain.exponentialRampToValueAtTime(0.18, now + 0.005);
-  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+  gain.gain.exponentialRampToValueAtTime(0.22, now + 0.01);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
 
-  osc.connect(filter);
+  osc1.connect(filter);
+  osc2.connect(filter);
   filter.connect(gain);
   gain.connect(audioCtx.destination);
 
-  osc.start(now);
-  osc.stop(now + 0.08);
+  osc1.start(now);
+  osc2.start(now);
+  osc1.stop(now + 0.12);
+  osc2.stop(now + 0.12);
 }
 // Layout constants
 const GROUND_Y = 148;  // top of ground strip
