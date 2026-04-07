@@ -157,18 +157,23 @@ let brakeAnim;
 let lastExhaust = 0;
 let exhaustPool = [];
 let exhaustIndex = 0;
-
+let audioCtx;
 function playExhaust(){
-  if (!exhaustPool.length) return;
+  if (!audioCtx) return;
 
-  const ex = exhaustPool[exhaustIndex];
-  exhaustIndex = (exhaustIndex + 1) % exhaustPool.length;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
 
-  ex.pause();
-  ex.currentTime = 0;
-  ex.volume = 0.9;
-  ex.playbackRate = 0.95 + Math.min(speedDisp, 120) * 0.003;
-  ex.play().catch(() => {});
+  osc.type = 'square';
+  osc.frequency.value = 80 + speedDisp * 2;
+
+  gain.gain.value = 0.15;
+
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+
+  osc.start();
+  osc.stop(audioCtx.currentTime + 0.05);
 }
 // Layout constants
 const GROUND_Y = 148;  // top of ground strip
@@ -699,7 +704,7 @@ if (engine) {
   engine.volume = 0.4;
   engine.play().catch(()=>{});
 }
-
+audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 const exhaustSrc = document.getElementById('exhaust');
 if (exhaustSrc && exhaustPool.length === 0) {
   for (let i = 0; i < 4; i++) {
