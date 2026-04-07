@@ -57,6 +57,12 @@ canvas {
   border-left:3px solid #f80;
   border-right:3px solid #f80;
 }
+  #cockpit {
+  height:120px;
+  background:#05070c;
+  border-top:3px solid #f80;
+  border-bottom:3px solid #f80;
+}
 #btn-area {
   width:100%;
   padding:10px;
@@ -119,6 +125,7 @@ canvas {
   </div>
   <div id="danger-bar"><div id="danger-fill"></div></div>
   <canvas id="c"></canvas>
+  <canvas id="cockpit"></canvas>
   <button id="start-btn">▶ START</button>
   <div id="btn-area">
     <button id="brake-btn">■ BRAKE</button>
@@ -136,7 +143,10 @@ const canvas = document.getElementById('c');
 const ctx    = canvas.getContext('2d');
 const CW = 320, CH = 200;
 canvas.width = CW; canvas.height = CH;
-
+const cockpit = document.getElementById('cockpit');
+const ctx2 = cockpit.getContext('2d');
+cockpit.width = 320;
+cockpit.height = 120;
 const elScore  = document.getElementById('score-val');
 const elSpeed  = document.getElementById('speed-val');
 const elDanger = document.getElementById('danger-fill');
@@ -703,10 +713,83 @@ skidMarks.forEach(s => {
 
   drawFlash();
   drawResult();
-
+drawCockpit();
   ctx.restore();
 }
-  
+  function drawCockpit() {
+  ctx2.clearRect(0, 0, cockpit.width, cockpit.height);
+
+  // 背景
+  ctx2.fillStyle = '#05070c';
+  ctx2.fillRect(0, 0, cockpit.width, cockpit.height);
+
+  // 上部パネル枠
+  ctx2.strokeStyle = '#2a2f3a';
+  ctx2.lineWidth = 2;
+  ctx2.strokeRect(12, 10, 296, 58);
+
+  // 中央のデジタル速度窓
+  ctx2.fillStyle = '#0b1118';
+  ctx2.fillRect(104, 20, 112, 30);
+
+  ctx2.strokeStyle = '#1e90ff';
+  ctx2.lineWidth = 2;
+  ctx2.strokeRect(104, 20, 112, 30);
+
+  ctx2.fillStyle = '#4deaff';
+  ctx2.font = 'bold 22px monospace';
+  ctx2.textAlign = 'center';
+  ctx2.textBaseline = 'middle';
+  ctx2.fillText(String(Math.floor(speedDisp)).padStart(3, '0'), 160, 35);
+
+  // km/h
+  ctx2.fillStyle = '#7fb6c2';
+  ctx2.font = '10px monospace';
+  ctx2.fillText('km/h', 236, 35);
+
+  // 左ゲージ枠
+  ctx2.strokeStyle = '#2a2f3a';
+  ctx2.strokeRect(24, 18, 26, 40);
+
+  // 右ゲージ枠
+  ctx2.strokeRect(270, 18, 26, 40);
+
+  // 左ゲージ（危険度）
+  const dangerW = Math.max(0, Math.min(1, speedDisp / 1200));
+  ctx2.fillStyle = '#39d5ff';
+  ctx2.fillRect(28, 54 - 32 * dangerW, 18, 32 * dangerW);
+
+  // 右ゲージ（ブレーキ演出用の仮バー）
+  const brakeW = Math.max(0, Math.min(1, brakeAnim / 1.4));
+  ctx2.fillStyle = '#39d5ff';
+  ctx2.fillRect(274, 54 - 32 * brakeW, 18, 32 * brakeW);
+
+  // 赤ランプ列
+  const lamps = [
+    { x: 72,  label: 'OIL',   on: false },
+    { x: 112, label: 'TEMP',  on: false },
+    { x: 152, label: 'BRAKE', on: state === S.STOP },
+    { x: 192, label: 'WARN',  on: speedDisp > 900 },
+    { x: 232, label: 'DOOR',  on: false }
+  ];
+
+  lamps.forEach(l => {
+    ctx2.fillStyle = l.on ? '#ff3b3b' : '#3a0d0d';
+    ctx2.fillRect(l.x, 76, 22, 8);
+
+    ctx2.fillStyle = l.on ? '#ffd0d0' : '#5a3a3a';
+    ctx2.font = '8px monospace';
+    ctx2.textAlign = 'center';
+    ctx2.fillText(l.label, l.x + 11, 95);
+  });
+
+  // ハンドル上部
+  ctx2.strokeStyle = '#7a6248';
+  ctx2.lineWidth = 6;
+  ctx2.beginPath();
+  ctx2.arc(160, 126, 52, Math.PI, Math.PI * 2);
+  ctx2.stroke();
+}
 // ── Loop ───────────────────────────────────────────────────
 function loop() { update(); draw(); requestAnimationFrame(loop); }
 
