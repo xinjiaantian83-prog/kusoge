@@ -808,7 +808,28 @@ drawWindshield();
   // ガラス暗部
   ctx3.fillStyle = '#081018';
   ctx3.fillRect(0, 0, windshield.width, windshield.height);
+// ガラス暗部
+ctx3.fillStyle = '#081018';
+ctx3.fillRect(0, 0, windshield.width, windshield.height);
 
+// ★ここに追加
+// 遠方の空
+ctx3.fillStyle = '#081018';
+ctx3.fillRect(0, 0, 320, 42);
+
+// 地平線
+ctx3.fillStyle = '#0b1620';
+ctx3.fillRect(0, 42, 320, 10);
+
+// 前方道路
+ctx3.fillStyle = '#111';
+ctx3.beginPath();
+ctx3.moveTo(120, 42);
+ctx3.lineTo(200, 42);
+ctx3.lineTo(320, 80);
+ctx3.lineTo(0, 80);
+ctx3.closePath();
+ctx3.fill();
   // 上側の薄い反射
  const grad = ctx3.createLinearGradient(0, 0, 0, 80);
 grad.addColorStop(0, 'rgba(80,180,255,0.08)');
@@ -821,16 +842,26 @@ grad.addColorStop(0.35, 'rgba(40,90,140,0.08)');
   ctx3.strokeStyle = 'rgba(120,220,255,0.22)';
   ctx3.lineWidth = 2;
 
-  const speedLineOffset = (frame * (1 + speedDisp * 0.02)) % 40;
- for (let i = -1; i < 6; i++) {
-  const y = i * 18 + speedLineOffset;
+ // 前方へ流れる道路ライン
+ctx3.strokeStyle = 'rgba(120,220,255,0.20)';
+ctx3.lineWidth = 2;
+
+const flow = (frame * (2 + speedDisp * 0.03)) % 28;
+
+for (let i = 0; i < 7; i++) {
+  const y = 12 + i * 12 + flow;
+  const spread = 18 + i * 22;
 
   ctx3.beginPath();
-  ctx3.moveTo(0, y);
-  ctx3.lineTo(320, y - (speedDisp * 0.02));
+  ctx3.moveTo(160 - spread, y);
+  ctx3.lineTo(160 - spread - 26, 80);
+  ctx3.stroke();
+
+  ctx3.beginPath();
+  ctx3.moveTo(160 + spread, y);
+  ctx3.lineTo(160 + spread + 26, 80);
   ctx3.stroke();
 }
-
   // 左右のガラス枠
   ctx3.fillStyle = '#000';
   ctx3.beginPath();
