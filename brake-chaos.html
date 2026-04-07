@@ -126,6 +126,7 @@ canvas {
   <div id="credit">© TOMARE INDUSTRIES  INSERT COIN</div>
 </div>
 <audio id="bgm" src="kaazoom-honkytonk-jam-rockabilly-music-403469.mp3" loop preload="auto"></audio>
+  <audio id="engine" src="engine.mp3" loop preload="auto"></audio>
 <script>
 
   
@@ -172,6 +173,8 @@ function reset() {
   carFalling  = false;
   hitstop     = 0;
   flashF      = 0;
+  const engine = document.getElementById('engine');
+if (engine) engine.pause();
   drv         = { x:0, y:0, vx:0, vy:0, angle:0, spin:0, active:false, trail:[] };
   resultAlpha = 0;
   resultTimer = 0;
@@ -585,6 +588,10 @@ skidMarks = skidMarks.filter(s => s.life > 0);
 
   elSpeed.textContent = String(Math.floor(speedDisp)).padStart(3, '0');
 }
+  const engine = document.getElementById('engine');
+if (engine && !engine.paused) {
+  engine.playbackRate = 0.6 + speedDisp * 0.005;
+}
 
 // ── Draw ───────────────────────────────────────────────────
 function draw() {
@@ -670,6 +677,11 @@ canvas.addEventListener('touchstart', e => { e.preventDefault(); onBrake(); }, {
 const startBtn = document.getElementById('start-btn');
 
 startBtn.addEventListener('click', async () => {
+  const engine = document.getElementById('engine');
+if (engine) {
+  engine.volume = 0.4;
+  engine.play().catch(()=>{});
+}
   const bgm = document.getElementById('bgm');
   if (bgm) {
     try {
