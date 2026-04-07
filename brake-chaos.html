@@ -158,9 +158,41 @@ let lastExhaust = 0;
 let exhaustPool = [];
 let exhaustIndex = 0;
 let audioCtx;
+  let exhaustEnabled = true;
 function playExhaust(){
   if (!audioCtx) return;
+function playBrakeSound(){
+  if (!audioCtx) return;
 
+  const now = audioCtx.currentTime;
+
+  const noise = audioCtx.createBufferSource();
+  const buffer = audioCtx.createBuffer(1, 44100, 44100);
+  const data = buffer.getChannelData(0);
+
+  for (let i = 0; i < data.length; i++) {
+    data[i] = Math.random() * 2 - 1;
+  }
+
+  noise.buffer = buffer;
+
+  const filter = audioCtx.createBiquadFilter();
+  filter.type = 'bandpass';
+  filter.frequency.value = 800;
+  filter.Q.value = 1.5;
+
+  const gain = audioCtx.createGain();
+  gain.gain.setValueAtTime(0.001, now);
+  gain.gain.exponentialRampToValueAtTime(0.6, now + 0.02);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.25);
+
+  noise.connect(filter);
+  filter.connect(gain);
+  gain.connect(audioCtx.destination);
+
+  noise.start(now);
+  noise.stop(now + 0.25);
+}
   const now = audioCtx.currentTime;
 
   const osc1 = audioCtx.createOscillator();
@@ -557,7 +589,7 @@ if (engine && !engine.paused) {
 const now = Date.now();
 const interval = Math.max(18, 80 - speedDisp * 0.15);
 
-if (speedDisp > 10 && now - lastExhaust > interval) {
+if (exhaustEnabled && speedDisp > 10 && now - lastExhaust > interval) {
   playExhaust();
   lastExhaust = now;
 }
@@ -676,6 +708,8 @@ function onBrake() {
 
   slowTimer   = 10;
   state       = S.STOP;
+  exhaustEnabled = false; // 排気停止
+playBrakeSound();       // ブレーキ音
   hitstop     = 12;
   flashF      = 8;
   const bgm = document.getElementById('bgm');
