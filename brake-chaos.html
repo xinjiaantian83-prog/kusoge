@@ -127,6 +127,7 @@ canvas {
 </div>
 <audio id="bgm" src="kaazoom-honkytonk-jam-rockabilly-music-403469.mp3" loop preload="auto"></audio>
   <audio id="engine" src="engine.mp3" loop preload="auto"></audio>
+  <audio id="exhaust" src="exhaust.mp3" preload="auto"></audio>
 <script>
 
   
@@ -153,7 +154,7 @@ let hitstop, flashF;
 let drv;
 let resultAlpha, resultTimer, exScore;
 let brakeAnim;
-
+let lastExhaust = 0;
 // Layout constants
 const GROUND_Y = 148;  // top of ground strip
 const CAR_X    = 80;   // car always here horizontally
@@ -513,7 +514,18 @@ const engine = document.getElementById('engine');
 if (engine && !engine.paused) {
   engine.playbackRate = 0.6 + speedDisp * 0.005;
 }
-  
+  // 排気音（スピード依存）
+const now = Date.now();
+const interval = Math.max(120, 600 - speedDisp * 5);
+
+if (now - lastExhaust > interval) {
+  const ex = document.getElementById('exhaust');
+  if (ex) {
+    ex.currentTime = 0;
+    ex.play().catch(() => {});
+  }
+  lastExhaust = now;
+}
 
   // タイヤ痕更新
   skidMarks.forEach(s => {
