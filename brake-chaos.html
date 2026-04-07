@@ -801,21 +801,40 @@ drawWindshield();
   ctx2.beginPath();
   ctx2.arc(160, 126, 52, Math.PI, Math.PI * 2);
   ctx2.stroke();
-    // 手（左）
+    // 手の影（立体感）
+ctx2.fillStyle = '#000';
+ctx2.fillRect(110, 108, 10, 2); // 左手影
+ctx2.fillRect(200, 108, 10, 2); // 右手影
+   // 左手
 ctx2.fillStyle = '#fca';
-ctx2.fillRect(110, 100, 14, 10);
 
-// 指輪（左）
+// 手のひら
+ctx2.fillRect(110, 102, 10, 6);
+
+// 指（ハンドルにかかる）
+ctx2.fillRect(108, 98, 3, 6);
+ctx2.fillRect(112, 97, 3, 6);
+ctx2.fillRect(116, 98, 3, 6);
+
+// 指輪（薬指）
 ctx2.fillStyle = '#ff0';
-ctx2.fillRect(120, 103, 4, 3);
+ctx2.fillRect(112, 99, 3, 2);
 
-// 手（右）
+
+// 右手
 ctx2.fillStyle = '#fca';
-ctx2.fillRect(196, 100, 14, 10);
 
-// 指輪（右）
+// 手のひら
+ctx2.fillRect(200, 102, 10, 6);
+
+// 指
+ctx2.fillRect(208, 98, 3, 6);
+ctx2.fillRect(204, 97, 3, 6);
+ctx2.fillRect(200, 98, 3, 6);
+
+// 指輪
 ctx2.fillStyle = '#ff0';
-ctx2.fillRect(196, 103, 4, 3);
+ctx2.fillRect(204, 99, 3, 2);
 }
  function drawWindshield() {
   ctx3.clearRect(0, 0, windshield.width, windshield.height);
