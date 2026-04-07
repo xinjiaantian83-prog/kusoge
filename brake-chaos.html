@@ -555,13 +555,12 @@ if (engine && !engine.paused) {
 }
   // 排気音（スピード依存）
 const now = Date.now();
-  console.log("排気チェック", speedDisp);
-const interval = Math.max(220, 1100 - speedDisp * 7);
+const interval = Math.max(18, 80 - speedDisp * 0.15);
+
 if (speedDisp > 10 && now - lastExhaust > interval) {
   playExhaust();
   lastExhaust = now;
 }
-
   // タイヤ痕更新
   skidMarks.forEach(s => {
     s.x -= (5 + speedDisp * 0.08);
