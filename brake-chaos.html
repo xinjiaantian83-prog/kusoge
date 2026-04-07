@@ -6,7 +6,6 @@
 <title>止まれ</title>
 <style>
 * { margin:0; padding:0; box-sizing:border-box; }
-
 body {
   background:#000;
   display:flex;
@@ -14,177 +13,982 @@ body {
   align-items:center;
   justify-content:center;
   min-height:100vh;
+  overflow:hidden;
 }
-
-#wrap { width:100%; max-width:480px; }
-
-canvas {
+#wrap {
+  display:flex;
+  flex-direction:column;
+  align-items:center;
   width:100%;
-  display:block;
-  image-rendering:pixelated;
-  border:3px solid #f80;
+  max-width:480px;
 }
-
-#cockpit { height:120px; }
-#windshield { height:80px; }
-
-#btn-area {
-  padding:10px;
+#hud {
+  width:100%;
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-end;
+  padding:4px 10px 6px;
   background:#000;
+  border-bottom:3px solid #f80;
 }
-
-#brake-btn {
+.hud-block { text-align:center; }
+.hud-label { color:#555; font:bold 9px monospace; letter-spacing:2px; }
+.hud-val   { font:bold 18px monospace; letter-spacing:1px; }
+#title-val { color:#f80; font-size:20px; text-shadow:0 0 8px #f804; }
+#score-val { color:#ff0; }
+#speed-val { color:#0ff; font-size:20px; }
+#danger-bar {
+  width:100%; height:7px;
+  background:#111;
+  border-bottom:2px solid #300;
+  overflow:hidden;
+}
+#danger-fill {
+  height:100%;
+  width:0%;
+  background:linear-gradient(90deg,#f00,#f80,#ff0);
+}
+canvas {
+  display:block;
   width:100%;
-  height:70px;
+  background:#000;
+  image-rendering:pixelated;
+  image-rendering:crisp-edges;
+  border-left:3px solid #f80;
+  border-right:3px solid #f80;
+}
+  #cockpit {
+  height:120px;
+  background:#05070c;
+  border-top:3px solid #f80;
+  border-bottom:3px solid #f80;
+}
+  #windshield {
+  height:80px;
+  background:#081018;
+  border-top:3px solid #f80;
+  border-bottom:3px solid #f80;
+}
+#btn-area {
+  width:100%;
+  padding:10px;
+  background:#0a0000;
+  border-top:3px solid #f80;
+  border-bottom:3px solid #f80;
+}
+#brake-btn {
+  display:block;
+  width:100%;
+  height:68px;
   background:#c00;
   color:#fff;
   font:bold 28px monospace;
+  letter-spacing:8px;
+  border:0;
+  border-bottom:6px solid #700;
+  border-right:4px solid #700;
+  cursor:pointer;
+  text-shadow:2px 2px 0 #900;
+  box-shadow:0 0 20px #f005, inset 0 1px 0 #f88;
+  -webkit-tap-highlight-color:transparent;
+  user-select:none;
+  outline:none;
+}
+#brake-btn:active { filter:brightness(1.4); }
+#credit {
+  color:#333;
+  font:10px monospace;
+  padding:6px 0;
+  letter-spacing:3px;
+  background:#000;
+  width:100%;
+  text-align:center;
+}
+  #start-btn {
+  width:100%;
+  height:60px;
+  font:bold 22px monospace;
+  background:#080;
+  color:#fff;
+  border:0;
 }
 </style>
 </head>
 <body>
 <div id="wrap">
+  <div id="hud">
+    <div class="hud-block">
+      <div class="hud-label">SCORE</div>
+      <div class="hud-val" id="score-val">0000000</div>
+    </div>
+    <div class="hud-block">
+      <div class="hud-val" id="title-val">止まれ</div>
+    </div>
+    <div class="hud-block">
+      <div class="hud-label">SPEED</div>
+      <div class="hud-val" id="speed-val">080</div>
+    </div>
+  </div>
+  <div id="danger-bar"><div id="danger-fill"></div></div>
   <canvas id="c"></canvas>
   <canvas id="windshield"></canvas>
   <canvas id="cockpit"></canvas>
+  <button id="start-btn">▶ START</button>
   <div id="btn-area">
-    <button id="brake-btn">BRAKE</button>
+    <button id="brake-btn">■ BRAKE</button>
   </div>
+  <div id="credit">© TOMARE INDUSTRIES  INSERT COIN</div>
 </div>
+<audio id="bgm" src="kaazoom-honkytonk-jam-rockabilly-music-403469.mp3" loop preload="auto"></audio>
+  <audio id="engine" src="engine.mp3" loop preload="auto"></audio>
+  <audio id="exhaust" src="engine.mp3" preload="auto"></audio>
 <script>
 
-// ===== canvas =====
+  
+// ── Canvas setup ───────────────────────────────────────────
 const canvas = document.getElementById('c');
-const ctx = canvas.getContext('2d');
-
-const windshield = document.getElementById('windshield');
-const ctx3 = windshield.getContext('2d');
-
+const ctx    = canvas.getContext('2d');
+const CW = 320, CH = 200;
+canvas.width = CW; canvas.height = CH;
 const cockpit = document.getElementById('cockpit');
 const ctx2 = cockpit.getContext('2d');
-
-canvas.width = 320;
-canvas.height = 200;
-windshield.width = 320;
-windshield.height = 80;
 cockpit.width = 320;
 cockpit.height = 120;
+  const windshield = document.getElementById('windshield');
+const ctx3 = windshield.getContext('2d');
+windshield.width = 320;
+windshield.height = 80;
+const elScore  = document.getElementById('score-val');
+const elSpeed  = document.getElementById('speed-val');
+const elDanger = document.getElementById('danger-fill');
 
-let frame = 0;
-let speedDisp = 200;
+// ── State ──────────────────────────────────────────────────
+const S = { RUN:0, STOP:1, FLY:2, RESULT:3 };
+let state, frame, speedDisp, speedTarget;
+  let slowTimer = 0;
+  let skidMarks = [];
+let scroll;        // ground/road scroll offset
+let cliffX;        // cliff left edge in screen coords
+let carX, carY, carVY; // car pos (carX fixed, carY for falling)
+let carFalling;
+let hitstop, flashF;
+let drv;
+let resultAlpha, resultTimer, exScore;
+let brakeAnim;
+let lastExhaust = 0;
+let exhaustPool = [];
+let exhaustIndex = 0;
+let audioCtx;
+  let exhaustEnabled = true;
+function playExhaust(){
+  if (!audioCtx) return;
 
-// ===== draw main =====
-function draw() {
-  ctx.clearRect(0,0,320,200);
+  const now = audioCtx.currentTime;
 
-  // 適当な背景
-  ctx.fillStyle = '#111';
-  ctx.fillRect(0,0,320,200);
+  const osc1 = audioCtx.createOscillator();
+  const osc2 = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  const filter = audioCtx.createBiquadFilter();
 
-  drawWindshield();
-  drawCockpit();
+  osc1.type = 'sawtooth';
+  osc2.type = 'square';
+
+  osc1.frequency.setValueAtTime(42 + speedDisp * 0.35, now);
+  osc2.frequency.setValueAtTime(21 + speedDisp * 0.18, now);
+
+  filter.type = 'lowpass';
+  filter.frequency.setValueAtTime(120, now);
+  filter.Q.value = 0.8;
+
+  gain.gain.setValueAtTime(0.001, now);
+  gain.gain.exponentialRampToValueAtTime(0.22, now + 0.01);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
+
+  osc1.connect(filter);
+  osc2.connect(filter);
+  filter.connect(gain);
+  gain.connect(audioCtx.destination);
+
+  osc1.start(now);
+  osc2.start(now);
+  osc1.stop(now + 0.05);
+  osc2.stop(now + 0.05);
 }
 
-// ===== windshield =====
-function drawWindshield() {
-  ctx3.clearRect(0,0,320,80);
+function playBrakeSound(){
+  if (!audioCtx) return;
 
+  const now = audioCtx.currentTime;
+
+  const osc1 = audioCtx.createOscillator();
+  const osc2 = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  const filter = audioCtx.createBiquadFilter();
+
+  osc1.type = 'sawtooth';
+  osc2.type = 'triangle';
+
+  osc1.frequency.setValueAtTime(1100, now);
+  osc1.frequency.exponentialRampToValueAtTime(320, now + 0.22);
+
+  osc2.frequency.setValueAtTime(700, now);
+  osc2.frequency.exponentialRampToValueAtTime(220, now + 0.22);
+
+  filter.type = 'lowpass';
+  filter.frequency.setValueAtTime(1800, now);
+  filter.frequency.exponentialRampToValueAtTime(700, now + 0.22);
+  filter.Q.value = 0.7;
+
+  gain.gain.setValueAtTime(0.001, now);
+  gain.gain.exponentialRampToValueAtTime(0.22, now + 0.01);
+  gain.gain.exponentialRampToValueAtTime(0.001, now + 0.22);
+
+  osc1.connect(filter);
+  osc2.connect(filter);
+  filter.connect(gain);
+  gain.connect(audioCtx.destination);
+
+  osc1.start(now);
+  osc2.start(now);
+  osc1.stop(now + 0.22);
+  osc2.stop(now + 0.22);
+}
+// Layout constants
+const GROUND_Y = 148;  // top of ground strip
+const CAR_X    = 80;   // car always here horizontally
+const CAR_DRAW_Y = GROUND_Y; // wheel base
+
+// ── Reset ──────────────────────────────────────────────────
+function reset() {
+  state       = S.RUN;
+  frame       = 0;
+  speedDisp   = 80;
+  speedTarget = 80;
+  scroll      = 0;
+  cliffX      = CW + 60;  // starts off-screen right
+  carX        = CAR_X;
+  carY        = CAR_DRAW_Y;
+  carVY       = 0;
+  carFalling  = false;
+  hitstop     = 0;
+  flashF      = 0;
+  const engine = document.getElementById('engine');
+if (engine) engine.pause();
+  drv         = { x:0, y:0, vx:0, vy:0, angle:0, spin:0, active:false, trail:[] };
+  resultAlpha = 0;
+  resultTimer = 0;
+  exScore     = 0;
+  skidMarks = [];
+  brakeAnim = 0;
+  lastExhaust = 0;
+  exhaustEnabled = true;
+  elDanger.style.width = '0%';
+  elScore.textContent  = '0000000';
+  elSpeed.textContent  = '080';
+ const bgm = document.getElementById('bgm');
+if (bgm) {
+  bgm.pause();
+  bgm.currentTime = 0;
+}
+}
+reset();
+
+// ── Pixel helper ───────────────────────────────────────────
+function px(x, y, w, h, c) {
+  ctx.fillStyle = c;
+  ctx.fillRect(x|0, y|0, w, h);
+}
+
+// ── Sky ────────────────────────────────────────────────────
+function drawSky() {
+  // Sky gradient bands
+  px(0,  0, CW, 80, '#0d0d1a');
+  px(0, 55, CW, 30, '#141430');
+  // Stars — scroll slowly (parallax)
+  const STARS = [[15,8],[58,6],[112,15],[193,7],[250,19],[305,11],[88,29],[174,23],[232,31],[48,42],[290,38]];
+  ctx.fillStyle = '#fff';
+  const ox = scroll * 0.015 % CW;
+  for (const [sx, sy] of STARS) {
+    const rx = ((sx - ox % CW) + CW * 2) % CW;
+    ctx.fillRect(rx|0, sy, 2, 2);
+  }
+  // Distant hills (scroll at 0.3x — mid parallax)
+  const hx = scroll * 0.3 % (CW * 2);
+  ctx.fillStyle = '#1a2a10';
+  const hills = [[0,30],[80,20],[160,28],[240,18],[320,26],[400,22],[480,30],[560,20]];
+  ctx.beginPath();
+  ctx.moveTo(0, 86);
+  for (const [hsx, hsy] of hills) {
+    const rx = ((hsx - hx % (CW * 2)) + CW * 4) % (CW * 2) - CW;
+    ctx.quadraticCurveTo(rx + 40, 86 - hsy, rx + 80, 86);
+  }
+  ctx.lineTo(CW, 86); ctx.lineTo(0, 86); ctx.closePath(); ctx.fill();
+}
+
+// ── Ground & road ──────────────────────────────────────────
+function drawGround() {
+  const GY = GROUND_Y;
+
+  // Ground fill
+  px(0, GY, CW, CH - GY, '#1a3a0d');
+  // Top grass edge
+  px(0, GY, CW, 5, '#4a8c2a');
+
+  // Road surface (band in lower portion)
+  const RY = GY + 5, RH = 40;
+  px(0, RY, CW, RH, '#2c2c2c');
+
+  // Road edge lines
+  px(0, RY,          CW, 3, '#ccc');
+  px(0, RY + RH - 3, CW, 3, '#ccc');
+
+  // Center dashes — scroll rightward at road speed
+  const dashW = 20, dashH = 4, gap = 16;
+  const period = dashW + gap;
+  const offset = scroll % period;
+  ctx.fillStyle = '#ff0';
+  for (let x = -period + (period - offset % period); x < CW + period; x += period) {
+    ctx.fillRect(x|0, (RY + RH/2 - dashH/2)|0, dashW, dashH);
+  }
+
+  // Sub-ground
+  px(0, RY + RH, CW, CH - (RY + RH), '#0d1f06');
+}
+
+// ── Cliff ──────────────────────────────────────────────────
+function drawCliff(cx) {
+  if (cx > CW) return;
+  const GY = GROUND_Y;
+  const GH = CH - GY;
+  const x  = cx|0;
+  const GW = 60;  // gap width
+
+  // Warning stripes along top of cliff edge
+  for (let i = 0; i < 10; i++) {
+    px(x + i * 8,     GY - 6, 4, 9, '#f00');
+    px(x + i * 8 + 4, GY - 6, 4, 9, '#ff0');
+  }
+
+  // Black abyss
+  px(x, GY, GW, GH, '#000005');
+
+  // Left cliff face (near edge)
+  for (let d = 0; d < 12; d++) {
+    const c = d < 4 ? '#3a200a' : '#6b4820';
+    px(x + d, GY + d, 2, GH - d, c);
+  }
+  // Rock strata lines
+  ctx.fillStyle = '#4a3015';
+  for (let d = 12; d < GH; d += 14) ctx.fillRect(x + 2, GY + d, 10, 2);
+
+  // Abyss depth lines
+  ctx.fillStyle = '#000820';
+  for (let d = 10; d < GH; d += 8) ctx.fillRect(x + 14, GY + d, GW - 16, 1);
+
+  // Far cliff face
+  px(x + GW - 8, GY, 8, GH, '#6b4820');
+  px(x + GW - 8, GY, 2, GH, '#3a200a');
+
+  // Far ground continues
+  px(x + GW, GY, CW, GH, '#1a3a0d');
+  px(x + GW, GY, CW, 5,  '#4a8c2a');
+  px(x + GW, GY + 5, CW, 35, '#2c2c2c');
+  px(x + GW, GY + 5, CW,  3, '#ccc');
+  px(x + GW, GY + 37, CW, 3, '#ccc');
+}
+
+// ── Car (side view, facing right) ──────────────────────────
+function drawCar(x, y) {
+  const xi = x|0, yi = y|0;
+
+  ctx.save();
+
+ const brakeTilt = brakeAnim * 0.5;
+const brakeDrop = brakeAnim * 8;
+
+if (brakeAnim > 0) {
+  ctx.translate(xi + 28, yi - brakeDrop);
+  ctx.rotate(brakeTilt);
+  ctx.translate(-(xi + 28), -yi);
+}
+
+  // Shadow
+  ctx.fillStyle = 'rgba(0,0,0,0.4)';
+  ctx.fillRect(xi + 4, yi + 2, 54, 6);
+
+  // Body（デロリアン風）
+px(xi + 2,  yi - 14, 58, 10, '#7f7f7f');
+px(xi + 4,  yi - 15, 54, 4,  '#c8c8c8');
+px(xi + 8,  yi - 22, 38, 8,  '#9a9a9a');
+
+// Front nose
+px(xi + 56, yi - 13, 8, 5, '#8a8a8a');
+px(xi + 60, yi - 16, 4, 3, '#bcbcbc');
+
+// Windows
+px(xi + 15, yi - 21, 10, 6, '#7adeff');
+px(xi + 31, yi - 21, 11, 6, '#7adeff');
+
+// Driver
+px(xi + 33, yi - 20, 5, 5, '#fca');
+px(xi + 34, yi - 19, 1, 1, '#000');
+px(xi + 36, yi - 19, 1, 1, '#000');
+
+// Door line
+px(xi + 28, yi - 22, 2, 10, '#666');
+
+// Front light
+px(xi + 61, yi - 19, 3, 3, '#9fffff');
+
+// Rear machine unit
+px(xi - 2,  yi - 18, 10, 8, '#5e5e5e');
+px(xi - 6,  yi - 23, 6, 6,  '#8f8f8f');
+px(xi - 8,  yi - 16, 5, 4,  '#3f3f3f');
+px(xi - 1,  yi - 22, 3, 2,  '#0ff');
+px(xi - 5,  yi - 18, 3, 2,  '#0ff');
+
+// Rear light
+px(xi + 2,  yi - 12, 3, 4, '#f44');
+
+// Underbody
+px(xi + 8,  yi - 3, 44, 2, '#444');
+  // Wheels
+  px(xi + 8,  yi - 6,  14, 10, '#111');
+  px(xi + 10, yi - 5,  10,  8, '#2a2a2a');
+  px(xi + 13, yi - 2,   4,  4, '#555');
+  px(xi + 14, yi - 1,   2,  2, '#888');
+
+  px(xi + 36, yi - 6,  14, 10, '#111');
+  px(xi + 38, yi - 5,  10,  8, '#2a2a2a');
+  px(xi + 41, yi - 2,   4,  4, '#555');
+  px(xi + 42, yi - 1,   2,  2, '#888');
+
+  // Speed lines
+  if (state === S.RUN || state === S.FLY) {
+    ctx.fillStyle = 'rgba(255,180,0,0.25)';
+    const boost = Math.min(3, speedDisp / 200);
+
+    for (let i = 0; i < 8; i++) {
+      const lw = 20 + i * 10 * boost;
+      const yy = yi - 28 + i * 4;
+      ctx.fillRect(xi - 10 - lw, yy, lw, 2);
+    }
+  }
+
+  ctx.restore();
+}
+// ── Driver (small pixel person) ────────────────────────────
+function drawDriver(d) {
+  if (!d.active) return;
+
+  // Ghost trail
+  for (let i = 0; i < d.trail.length; i++) {
+    const t = d.trail[i];
+    const a = (i / d.trail.length) * 0.2;
+    ctx.save();
+    ctx.globalAlpha = a;
+    ctx.translate(t.x|0, t.y|0);
+    ctx.rotate(t.angle);
+    px(-6, -20, 12, 11, '#fca');
+    px(-6,  -9, 12, 13, '#35f');
+    ctx.restore();
+  }
+  ctx.globalAlpha = 1;
+
+  ctx.save();
+  ctx.translate(d.x|0, d.y|0);
+  ctx.rotate(d.angle);
+
+  // Head
+  px(-6, -20, 12, 11, '#fca');
+  // Panic eyes
+  px(-5, -18,  3,  3, '#000'); px(-5,-18, 1, 1, '#fff');
+  px( 2, -18,  3,  3, '#000'); px( 2,-18, 1, 1, '#fff');
+  // Wide-open mouth
+  px(-4, -12,  8,  4, '#000');
+  px(-3, -11,  6,  2, '#f44');
+  // Body
+  px(-6,  -9, 12, 13, '#35f');
+  // Arms flailing
+  px(-14,  -9,  8,  3, '#fca');
+  px(-17, -13,  5,  5, '#fca');
+  px(  6,  -9,  8,  3, '#fca');
+  px( 12, -13,  5,  5, '#fca');
+  // Legs
+  px(-6,   4,  5, 10, '#222');
+  px( 1,   4,  5, 10, '#222');
+
+  ctx.restore();
+}
+
+// ── Flash overlay ──────────────────────────────────────────
+function drawFlash() {
+  if (flashF <= 0) return;
+  ctx.fillStyle = `rgba(255,255,255,${(flashF / 8) * 0.8})`;
+  ctx.fillRect(0, 0, CW, CH);
+  flashF--;
+}
+
+// ── Result overlay ─────────────────────────────────────────
+function drawResult() {
+  if (resultAlpha <= 0) return;
+  ctx.save();
+  ctx.globalAlpha = Math.min(1, resultAlpha);
+
+  ctx.fillStyle = 'rgba(0,0,0,0.62)';
+  ctx.fillRect(0, 0, CW, CH);
+
+  const cx = CW/2, cy = CH/2;
+  const hue = (frame * 11) % 360;
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+
+  // EXCELLENT!!
+  ctx.font = 'bold 40px monospace';
+  ctx.lineWidth = 7; ctx.strokeStyle = '#000';
+  ctx.strokeText('EXCELLENT!!', cx, cy - 28);
+  ctx.fillStyle = `hsl(${hue},100%,62%)`;
+  ctx.fillText('EXCELLENT!!', cx, cy - 28);
+
+  // Score
+  ctx.font = 'bold 20px monospace';
+  ctx.lineWidth = 4; ctx.strokeStyle = '#000';
+  ctx.strokeText(String(exScore).padStart(8,'0'), cx, cy + 8);
+  ctx.fillStyle = '#ff0';
+  ctx.fillText(String(exScore).padStart(8,'0'), cx, cy + 8);
+
+  // Sub-text
+  const subs = ['PERFECT BRAKE!!','SAFETY FIRST!!','AMAZING STOP!!','NO PROBLEM!!'];
+  ctx.font = 'bold 11px monospace';
+  ctx.lineWidth = 2; ctx.strokeStyle = '#000';
+  const sub = subs[exScore % subs.length];
+  ctx.strokeText(sub, cx, cy + 30);
+  ctx.fillStyle = '#f4f';
+  ctx.fillText(sub, cx, cy + 30);
+
+  ctx.restore();
+}
+
+// ── Eject driver ───────────────────────────────────────────
+function ejectDriver() {
+  const vectors = [
+    { vx:  0.5, vy: -20 },   // straight up
+    { vx:  15,  vy: -14 },   // right-up
+    { vx: -15,  vy: -14 },   // left-up
+    { vx:   1,  vy:  18 },   // STRAIGHT DOWN
+    { vx:  18,  vy:   4 },   // hard right
+    { vx: -18,  vy:   4 },   // hard left
+    { vx:   1,  vy: -22 },   // rocket vertical
+    { vx:  19,  vy:  13 },   // diagonal down-right
+    { vx: -19,  vy:  13 },   // diagonal down-left
+    { vx:  13,  vy: -18 },   // steep right-up
+    { vx: -13,  vy: -18 },   // steep left-up
+  ];
+  const v = vectors[Math.floor(Math.random() * vectors.length)];
+  // Driver sits on top of car, slightly right of center
+   // 車内の顔と同じ位置から飛び出す
+  const baseX = state === S.STOP ? CAR_X + 41 : CAR_X + 37;
+  const baseY = state === S.STOP ? carY - 30 : carY - 27;
+
+  drv.x = baseX;
+  drv.y = baseY;
+  drv.vx    = v.vx + (Math.random() - 0.5) * 2;
+  drv.vy    = v.vy + (Math.random() - 0.5) * 2;
+  drv.angle = 0;
+  drv.spin  = (Math.random() > 0.5 ? 1 : -1) * (0.25 + Math.random() * 0.35);
+  drv.active = true;
+  drv.trail  = [];
+}
+
+// ── Update ─────────────────────────────────────────────────
+function update() {
+  if (slowTimer > 0) {
+    slowTimer--;
+  }
+
+  if (hitstop > 0) {
+    hitstop--;
+    return;
+  }
+
+  frame++;
+const engine = document.getElementById('engine');
+if (engine && !engine.paused) {
+  engine.playbackRate = 0.6 + speedDisp * 0.005;
+}
+  // 排気音（スピード依存）
+const now = Date.now();
+const interval = Math.max(18, 80 - speedDisp * 0.15);
+
+if (exhaustEnabled && speedDisp > 10 && now - lastExhaust > interval) {
+  playExhaust();
+  lastExhaust = now;
+}
+  // タイヤ痕更新
+  skidMarks.forEach(s => {
+    s.x -= (5 + speedDisp * 0.08);
+    s.life--;
+  });
+  skidMarks = skidMarks.filter(s => s.life > 0);
+
+  // Road speed
+  const roadSpd = 5 + speedDisp * 0.08;
+
+  if (state === S.RUN) {
+    scroll += roadSpd;
+    cliffX -= roadSpd;
+    cliffX -= 0.3;
+
+    speedTarget = 80 + frame * 0.9;
+    speedDisp += (speedTarget - speedDisp) * 0.06;
+
+    const danger = Math.max(0, Math.min(100, (1 - (cliffX - CAR_X - 60) / (CW * 0.7)) * 100));
+    elDanger.style.width = danger + '%';
+
+    if (carFalling) {
+      carVY += 0.6;
+      carY += carVY;
+      scroll += roadSpd;
+    }
+
+    if (carY > CH + 60) {
+      state = S.RESULT;
+      resultTimer = frame;
+      setTimeout(reset, 2200);
+    }
+  }
+if (state === S.FLY) {
+
+  // Car continues to cliff and falls
+  //if (!carFalling && CAR_X + 60 >= cliffX) {
+  //  carFalling = true; carVY = 0;
+  //}
+  if (carFalling) {
+    carVY += 0.6;
+    carY  += carVY;
+  }
+
+  // Driver physics
+  drv.trail.push({ x: drv.x, y: drv.y, angle: drv.angle });
+  if (drv.trail.length > 9) drv.trail.shift();
+  drv.vy    += 0.27;
+  drv.x     += drv.vx;
+  drv.y     += drv.vy;
+  drv.angle += drv.spin;
+
+  // Show EXCELLENT after brief delay
+  if (resultTimer === 0) resultTimer = frame;
+  if (frame > resultTimer + 30) resultAlpha = Math.min(1, resultAlpha + 0.07);
+
+  const off = drv.x < -60 || drv.x > CW + 60 || drv.y > CH + 60 || drv.y < -130;
+  if (off && resultAlpha >= 1) state = S.RESULT;
+}
+  
+
+  if (state === S.RESULT) {
+    resultAlpha = Math.min(1, resultAlpha + 0.04);
+    if (frame > resultTimer + 300) reset();
+  }
+
+  elSpeed.textContent = String(Math.floor(speedDisp)).padStart(3, '0');
+}
+  
+
+// ── Draw ───────────────────────────────────────────────────
+function draw() {
+  ctx.clearRect(0, 0, CW, CH);
+
+  ctx.save();
+
+  if (speedDisp > 300) {
+    const shake = Math.min(4, (speedDisp - 300) * 0.008);
+    ctx.translate(
+      (Math.random() - 0.5) * shake,
+      (Math.random() - 0.5) * shake
+    );
+  }
+
+  drawSky();
+  drawGround();
+  // タイヤ痕描画
+ctx.fillStyle = 'rgba(0,0,0,0.5)';
+skidMarks.forEach(s => {
+  ctx.fillRect(s.x, s.y, 8, 2);
+});
+  //drawCliff(cliffX);
+  drawCar(110, CAR_DRAW_Y);
+  if (drv.active) drawDriver(drv);
+
+  // Scanlines
+  ctx.fillStyle = 'rgba(0,0,0,0.09)';
+  for (let y = 0; y < CH; y += 3) ctx.fillRect(0, y, CW, 1);
+
+  drawFlash();
+drawResult();
+drawCockpit();
+drawWindshield();
+  ctx.restore();
+}
+  function drawCockpit() {
+  ctx2.clearRect(0, 0, cockpit.width, cockpit.height);
+
+  // 背景
+  ctx2.fillStyle = '#05070c';
+  ctx2.fillRect(0, 0, cockpit.width, cockpit.height);
+
+  // 上部パネル枠
+  ctx2.strokeStyle = '#2a2f3a';
+  ctx2.lineWidth = 2;
+  ctx2.strokeRect(12, 10, 296, 58);
+
+  // 中央のデジタル速度窓
+  ctx2.fillStyle = '#0b1118';
+  ctx2.fillRect(104, 20, 112, 30);
+
+  ctx2.strokeStyle = '#1e90ff';
+  ctx2.lineWidth = 2;
+  ctx2.strokeRect(104, 20, 112, 30);
+
+  ctx2.fillStyle = '#4deaff';
+  ctx2.font = 'bold 22px monospace';
+  ctx2.textAlign = 'center';
+  ctx2.textBaseline = 'middle';
+  ctx2.fillText(String(Math.floor(speedDisp)).padStart(3, '0'), 160, 35);
+
+  // km/h
+  ctx2.fillStyle = '#7fb6c2';
+  ctx2.font = '10px monospace';
+  ctx2.fillText('km/h', 236, 35);
+
+  // 左ゲージ枠
+  ctx2.strokeStyle = '#2a2f3a';
+  ctx2.strokeRect(24, 18, 26, 40);
+
+  // 右ゲージ枠
+  ctx2.strokeRect(270, 18, 26, 40);
+
+  // 左ゲージ（危険度）
+  const dangerW = Math.max(0, Math.min(1, speedDisp / 1200));
+  ctx2.fillStyle = '#39d5ff';
+  ctx2.fillRect(28, 54 - 32 * dangerW, 18, 32 * dangerW);
+
+  // 右ゲージ（ブレーキ演出用の仮バー）
+  const brakeW = Math.max(0, Math.min(1, brakeAnim / 1.4));
+  ctx2.fillStyle = '#39d5ff';
+  ctx2.fillRect(274, 54 - 32 * brakeW, 18, 32 * brakeW);
+
+  // 赤ランプ列
+  const lamps = [
+    { x: 72,  label: 'OIL',   on: false },
+    { x: 112, label: 'TEMP',  on: false },
+    { x: 152, label: 'BRAKE', on: state === S.STOP },
+    { x: 192, label: 'WARN',  on: speedDisp > 900 },
+    { x: 232, label: 'DOOR',  on: false }
+  ];
+
+  lamps.forEach(l => {
+    ctx2.fillStyle = l.on ? '#ff3b3b' : '#3a0d0d';
+    ctx2.fillRect(l.x, 76, 22, 8);
+
+    ctx2.fillStyle = l.on ? '#ffd0d0' : '#5a3a3a';
+    ctx2.font = '8px monospace';
+    ctx2.textAlign = 'center';
+    ctx2.fillText(l.label, l.x + 11, 95);
+  });
+
+  // ハンドル上部
+  ctx2.strokeStyle = '#7a6248';
+  ctx2.lineWidth = 6;
+  ctx2.beginPath();
+  ctx2.arc(160, 126, 52, Math.PI, Math.PI * 2);
+  ctx2.stroke();
+    // 手（左）
+ctx2.fillStyle = '#fca';
+ctx2.fillRect(110, 100, 14, 10);
+
+// 指輪（左）
+ctx2.fillStyle = '#ff0';
+ctx2.fillRect(120, 103, 4, 3);
+
+// 手（右）
+ctx2.fillStyle = '#fca';
+ctx2.fillRect(196, 100, 14, 10);
+
+// 指輪（右）
+ctx2.fillStyle = '#ff0';
+ctx2.fillRect(196, 103, 4, 3);
+}
+ function drawWindshield() {
+  ctx3.clearRect(0, 0, windshield.width, windshield.height);
+
+  // 背景
   ctx3.fillStyle = '#081018';
-  ctx3.fillRect(0,0,320,80);
+  ctx3.fillRect(0, 0, windshield.width, windshield.height);
 
-  // 道路
+  // 遠方の空
+  ctx3.fillStyle = '#081018';
+  ctx3.fillRect(0, 0, 320, 42);
+
+  // 地平線
+  ctx3.fillStyle = '#0b1620';
+  ctx3.fillRect(0, 42, 320, 10);
+
+  // 前方道路（遠近強化）
   ctx3.fillStyle = '#111';
   ctx3.beginPath();
-  ctx3.moveTo(150, 40);
-  ctx3.lineTo(170, 40);
+  ctx3.moveTo(150, 42);
+  ctx3.lineTo(170, 42);
   ctx3.lineTo(320, 80);
   ctx3.lineTo(0, 80);
   ctx3.closePath();
   ctx3.fill();
 
-  // 中央ライン
+  // 中央ライン（奥から手前）
   ctx3.strokeStyle = '#ff0';
   ctx3.lineWidth = 2;
 
-  const flow = (frame*3)%40;
+  const centerFlow = (frame * (2 + speedDisp * 0.04)) % 40;
 
-  for(let i=0;i<6;i++){
-    const y = 40 + i*10 + flow;
-    const spread = i*6;
+  for (let i = 0; i < 6; i++) {
+    const y = 45 + i * 10 + centerFlow;
+    const spread = i * 6;
 
     ctx3.beginPath();
-    ctx3.moveTo(160-spread, y);
-    ctx3.lineTo(160-spread-4, y+12);
+    ctx3.moveTo(160 - spread, y);
+    ctx3.lineTo(160 - spread - 4, y + 12);
     ctx3.stroke();
 
     ctx3.beginPath();
-    ctx3.moveTo(160+spread, y);
-    ctx3.lineTo(160+spread+4, y+12);
+    ctx3.moveTo(160 + spread, y);
+    ctx3.lineTo(160 + spread + 4, y + 12);
     ctx3.stroke();
   }
+
+  // 上側の薄い反射
+  const grad = ctx3.createLinearGradient(0, 0, 0, 80);
+  grad.addColorStop(0, 'rgba(80,180,255,0.08)');
+  grad.addColorStop(0.35, 'rgba(40,90,140,0.08)');
+  grad.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx3.fillStyle = grad;
+  ctx3.fillRect(0, 0, windshield.width, windshield.height);
+
+  // 前方へ流れる道路ライン
+  ctx3.strokeStyle = 'rgba(120,220,255,0.20)';
+  ctx3.lineWidth = 2;
+
+  const roadFlow = (frame * (2 + speedDisp * 0.03)) % 28;
+
+  for (let i = 0; i < 7; i++) {
+    const y = 12 + i * 12 + roadFlow;
+    const spread = 18 + i * 22;
+
+    ctx3.beginPath();
+    ctx3.moveTo(160 - spread, y);
+    ctx3.lineTo(160 - spread - 26, 80);
+    ctx3.stroke();
+
+    ctx3.beginPath();
+    ctx3.moveTo(160 + spread, y);
+    ctx3.lineTo(160 + spread + 26, 80);
+    ctx3.stroke();
+  }
+
+  // 左右のガラス枠
+  ctx3.fillStyle = '#000';
+
+  ctx3.beginPath();
+  ctx3.moveTo(0, 0);
+  ctx3.lineTo(24, 0);
+  ctx3.lineTo(54, 80);
+  ctx3.lineTo(0, 80);
+  ctx3.closePath();
+  ctx3.fill();
+
+  ctx3.beginPath();
+  ctx3.moveTo(320, 0);
+  ctx3.lineTo(296, 0);
+  ctx3.lineTo(266, 80);
+  ctx3.lineTo(320, 80);
+  ctx3.closePath();
+  ctx3.fill();
+
+  // ダッシュボード上端
+  ctx3.fillStyle = '#111';
+  ctx3.fillRect(0, 68, 320, 12);
+
+  // 枠線
+  ctx3.strokeStyle = '#2b2f38';
+  ctx3.lineWidth = 2;
+  ctx3.strokeRect(1, 1, 318, 78);
+}
+// ── Loop ───────────────────────────────────────────────────
+function loop() { update(); draw(); requestAnimationFrame(loop); }
+
+// ── Brake ──────────────────────────────────────────────────
+function onBrake() {
+ 
+  if (state !== S.RUN) return;
+
+  slowTimer   = 10;
+  state       = S.STOP;
+  exhaustEnabled = false; // 排気停止
+playBrakeSound();       // ブレーキ音
+  hitstop     = 12;
+  flashF      = 8;
+  const bgm = document.getElementById('bgm');
+if (bgm) bgm.pause();
+  brakeAnim   = 1.4;
+
+for (let i = 0; i < 12; i++) {
+  skidMarks.push({
+    x: CAR_X + 10 - i * 6,
+    y: GROUND_Y + 30,
+    life: 30
+  });
+}
+  resultAlpha = 0;
+  resultTimer = 0;
+  carFalling  = false;
+  carY        = CAR_DRAW_Y;
+  carVY       = 0;
+  exScore     = Math.floor(Math.random() * 89999999) + 10000000;
+  elScore.textContent = String(exScore).padStart(7, '0');
+
+  setTimeout(() => {
+    slowTimer = 6;
+    state = S.FLY;
+    ejectDriver();
+  }, 230);
 }
 
-// ===== cockpit =====
-function drawCockpit() {
+// ── Input ──────────────────────────────────────────────────
+const btn = document.getElementById('brake-btn');
+btn.addEventListener('click', onBrake);
+btn.addEventListener('touchstart', e => { e.preventDefault(); onBrake(); }, { passive:false });
 
-  ctx2.clearRect(0,0,320,120);
+canvas.addEventListener('click', onBrake);
+canvas.addEventListener('touchstart', e => { e.preventDefault(); onBrake(); }, { passive:false });
 
-  ctx2.fillStyle = '#05070c';
-  ctx2.fillRect(0,0,320,120);
+const startBtn = document.getElementById('start-btn');
 
-  // スピード表示
-  ctx2.fillStyle='#0af';
-  ctx2.font='20px monospace';
-  ctx2.fillText(speedDisp+' km/h',100,40);
+startBtn.addEventListener('click', async () => {
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
-  // ===== ハンドル揺れ =====
-  const shake = Math.sin(frame*0.2) * 5;
+  const engine = document.getElementById('engine');
+  if (engine) {
+    engine.volume = 0.4;
+    engine.play().catch(()=>{});
+  }
 
-  ctx2.save();
-  ctx2.translate(shake,0);
+  const bgm = document.getElementById('bgm');
+  if (bgm) {
+    bgm.pause();
+    bgm.currentTime = 0;
+  }
 
-  ctx2.strokeStyle='#aaa';
-  ctx2.lineWidth=6;
-  ctx2.beginPath();
-  ctx2.arc(160,110,50,Math.PI,Math.PI*2);
-  ctx2.stroke();
-
-  ctx2.restore();
-
-  // ===== 手（でかい） =====
-
-  // 左
-  ctx2.fillStyle='#fca';
-  ctx2.fillRect(100,95,18,10);
-  ctx2.fillRect(98,88,5,10);
-  ctx2.fillRect(104,86,5,10);
-  ctx2.fillRect(110,88,5,10);
-
-  // 指輪
-  ctx2.fillStyle='#ff0';
-  ctx2.fillRect(104,90,5,2);
-
-  // 右
-  ctx2.fillStyle='#fca';
-  ctx2.fillRect(200,95,18,10);
-  ctx2.fillRect(218,88,5,10);
-  ctx2.fillRect(212,86,5,10);
-  ctx2.fillRect(206,88,5,10);
-
-  ctx2.fillStyle='#ff0';
-  ctx2.fillRect(212,90,5,2);
-}
-
-// ===== loop =====
-function loop(){
-  frame++;
-  speedDisp += 0.5;
-  draw();
-  requestAnimationFrame(loop);
-}
+  startBtn.style.display = 'none';
+});
 
 loop();
-
 </script>
 </body>
 </html>
