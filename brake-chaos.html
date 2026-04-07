@@ -155,11 +155,17 @@ let drv;
 let resultAlpha, resultTimer, exScore;
 let brakeAnim;
 let lastExhaust = 0;
-  function playExhaust(){
-  const src = document.getElementById('exhaust');
-  if (!src) return;
+let exhaustPool = [];
+let exhaustIndex = 0;
 
-  const ex = src.cloneNode();
+function playExhaust(){
+  if (!exhaustPool.length) return;
+
+  const ex = exhaustPool[exhaustIndex];
+  exhaustIndex = (exhaustIndex + 1) % exhaustPool.length;
+
+  ex.pause();
+  ex.currentTime = 0;
   ex.volume = 0.9;
   ex.playbackRate = 0.95 + Math.min(speedDisp, 120) * 0.003;
   ex.play().catch(() => {});
@@ -191,6 +197,7 @@ if (engine) engine.pause();
   exScore     = 0;
   skidMarks = [];
   brakeAnim = 0;
+  lastExhaust = 0;
   elDanger.style.width = '0%';
   elScore.textContent  = '0000000';
   elSpeed.textContent  = '080';
@@ -526,9 +533,9 @@ if (engine && !engine.paused) {
 }
   // 排気音（スピード依存）
 const now = Date.now();
-const interval = Math.max(180, 900 - speedDisp * 6);
-
-if (speedDisp > 8 && now - lastExhaust > interval) {
+  console.log("排気チェック", speedDisp);
+const interval = Math.max(220, 1100 - speedDisp * 7);
+if (speedDisp > 10 && now - lastExhaust > interval) {
   playExhaust();
   lastExhaust = now;
 }
@@ -687,11 +694,22 @@ canvas.addEventListener('touchstart', e => { e.preventDefault(); onBrake(); }, {
 const startBtn = document.getElementById('start-btn');
 
 startBtn.addEventListener('click', async () => {
-  const engine = document.getElementById('engine');
+ const engine = document.getElementById('engine');
 if (engine) {
   engine.volume = 0.4;
   engine.play().catch(()=>{});
 }
+
+const exhaustSrc = document.getElementById('exhaust');
+if (exhaustSrc && exhaustPool.length === 0) {
+  for (let i = 0; i < 4; i++) {
+    const ex = new Audio(exhaustSrc.src);
+    ex.preload = 'auto';
+    ex.volume = 0.9;
+    exhaustPool.push(ex);
+  }
+}
+  
   const bgm = document.getElementById('bgm');
 if (bgm) {
   try {
